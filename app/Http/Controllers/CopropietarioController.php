@@ -5,48 +5,88 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Copropietario;
 use App\Models\PersonaAutorizada;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class CopropietarioController extends Controller
 {
     public function index(Request $request)
     {
         $buscar = $request->get('buscar');
-        $query = Copropietario::query();
+        $dept_page = $request->get('dept_page', 1);
+        $co_page = $request->input('co_page', []); // Ensure co_page is an array
+
+        $departmentsPerPage = 3;
+        $coownersPerPage = 10;
+
+        $allDepartmentNumbersQuery = Copropietario::query();
+        $copropietariosData = [];
 
         if ($buscar) {
-            $query->where(function ($q) use ($buscar) {
+            // Apply search to the base query to find relevant co-owners
+            $allDepartmentNumbersQuery->where(function ($q) use ($buscar) {
                 $q->where('nombre_completo', 'like', "%$buscar%")
                     ->orWhere('telefono', 'like', "%$buscar%")
                     ->orWhere('correo', 'like', "%$buscar%")
                     ->orWhere('patente', 'like', "%$buscar%")
                     ->orWhere('estacionamiento', 'like', "%$buscar%")
                     ->orWhere('bodega', 'like', "%$buscar%");
-
-                // Búsqueda exacta si es número
                 if (is_numeric($buscar)) {
                     $q->orWhere('numero_departamento', '=', $buscar);
                 } else {
+                    // Allow searching for non-numeric department numbers if they exist as strings
                     $q->orWhere('numero_departamento', 'like', "%$buscar%");
                 }
             });
         }
 
-        $filtrados = $query->orderBy('numero_departamento')->orderBy('tipo')->get();
-        $agrupado = $filtrados->groupBy('numero_departamento');
-        $departamentos = $agrupado->keys()->sort()->values()->all();
+        // Get the list of department numbers that are relevant after applying the search
+        $relevantDepartmentNumbers = $allDepartmentNumbersQuery->select('numero_departamento')
+                                    ->distinct()
+                                    ->orderBy('numero_departamento')
+                                    ->pluck('numero_departamento');
 
-        $pagina = $request->get('page', 1);
-        $porPagina = 2;
-        $bloqueDeptos = array_slice($departamentos, ($pagina - 1) * $porPagina, $porPagina);
+        // Create the outer paginator for departments
+        $currentPageDept = Paginator::resolveCurrentPage('dept_page');
+        $currentDepartmentSlice = $relevantDepartmentNumbers->slice(($currentPageDept - 1) * $departmentsPerPage, $departmentsPerPage);
 
-        $copropietarios = collect();
-        foreach ($bloqueDeptos as $numero) {
-            $copropietarios[$numero] = $agrupado[$numero];
+        $departmentsPaginator = new LengthAwarePaginator(
+            $currentDepartmentSlice,
+            $relevantDepartmentNumbers->count(),
+            $departmentsPerPage,
+            $currentPageDept,
+            ['path' => Paginator::resolveCurrentPath(), 'pageName' => 'dept_page']
+        );
+
+        // Now, for each department in the current department page, get its co-owners
+        foreach ($currentDepartmentSlice as $deptNum) {
+            $coownerQuery = Copropietario::where('numero_departamento', $deptNum);
+
+            // If buscar is active, we need to filter co-owners *within* this department.
+            // However, if $buscar *is* $deptNum, we don't need to re-filter by $buscar,
+            // as we want all co-owners of that specific department.
+            if ($buscar && strval($deptNum) !== strval($buscar)) { // ensure string comparison
+                 $coownerQuery->where(function ($q) use ($buscar) {
+                    $q->where('nombre_completo', 'like', "%$buscar%")
+                        ->orWhere('telefono', 'like', "%$buscar%")
+                        ->orWhere('correo', 'like', "%$buscar%")
+                        ->orWhere('patente', 'like', "%$buscar%")
+                        ->orWhere('estacionamiento', 'like', "%$buscar%")
+                        ->orWhere('bodega', 'like', "%$buscar%");
+                    // No need to check for numero_departamento here again as it's already $deptNum
+                });
+            }
+
+            $coownerQuery->orderBy('tipo'); // Order co-owners by type
+
+            // Ensure co_page value for this deptNum is an integer
+            $currentCoPageForDept = isset($co_page[$deptNum]) ? (int)$co_page[$deptNum] : 1;
+
+            $paginatedCoowners = $coownerQuery->paginate($coownersPerPage, ['*'], 'co_page.' . $deptNum, $currentCoPageForDept);
+            $copropietariosData[$deptNum] = $paginatedCoowners;
         }
 
-        $totalPaginas = ceil(count($departamentos) / $porPagina);
-
-        return view('copropietarios.index', compact('copropietarios', 'pagina', 'totalPaginas'));
+        return view('copropietarios.index', compact('departmentsPaginator', 'copropietariosData', 'buscar', 'co_page'));
     }
 
     public function create()
