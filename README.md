@@ -61,8 +61,8 @@ php artisan migrate
 ## 👤 Usuario de prueba (opcional)
 
 ```txt
-Email: admin@example.com
-Contraseña: 12345678
+📧 Email: publico@demo.com  
+🔐 Contraseña: demo1234
 ```
 
 ## ✨ Funcionalidades futuras
