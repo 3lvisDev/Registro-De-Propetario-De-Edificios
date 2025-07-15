@@ -1,145 +1,132 @@
 @extends('layouts.base')
 
-@section('title', 'Agregar Copropietario')
+@section('title', 'Copropietarios')
 
 @section('content')
-<div class="container">
-    <h2 class="text-dark mb-4">🏢 Agregar Nuevo Copropietario y Departamento</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-dark">🏢 Copropietarios por Departamento</h2>
+        <a href="{{ route('copropietarios.create') }}" class="btn btn-warning text-white">
+            <i class="fas fa-plus-circle"></i> Agregar Nuevo
+        </a>
+    </div>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+    <form method="GET" action="{{ route('copropietarios.index') }}" class="mb-4 d-flex gap-2">
+        <input type="text" name="buscar" class="form-control" placeholder="🔍 Buscar por nombre, patente, etc." value="{{ request('buscar') }}">
+        <button type="submit" class="btn btn-dark">Buscar</button>
+    </form>
+
+    @if ($departmentsPaginator->isEmpty() && request('buscar'))
+        <div class="alert alert-warning text-center" role="alert">
+            <h5>No se encontraron departamentos ni copropietarios que coincidan con su término de búsqueda: "{{ request('buscar') }}"</h5>
         </div>
+    @elseif ($departmentsPaginator->isEmpty())
+        <div class="alert alert-info text-center" role="alert">
+            <h5>No hay departamentos registrados o que coincidan con los criterios actuales.</h5>
+        </div>
+    @else
+        @foreach ($departmentsPaginator as $deptNum)
+            @php
+                $coownersPaginator = $copropietariosData[$deptNum] ?? null;
+            @endphp
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">🏠 Departamento {{ $deptNum }}</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if ($coownersPaginator && $coownersPaginator->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover m-0">
+                                <thead class="table-light text-center">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Teléfono</th>
+                                        <th>Correo</th>
+                                        <th>Estac.</th>
+                                        <th>Bodega</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-center align-middle">
+                                    @foreach ($coownersPaginator as $c)
+                                        <tr>
+                                            <td>{{ ($coownersPaginator->currentPage() - 1) * $coownersPaginator->perPage() + $loop->iteration }}</td>
+                                            <td>{{ $c->nombre_completo }}</td>
+                                            <td>
+                                                @if($c->tipo === 'propietario')
+                                                    <span class="badge bg-primary">Propietario</span>
+                                                @else
+                                                    <span class="badge bg-info text-dark">Arrendatario</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $c->telefono }}</td>
+                                            <td>{{ $c->correo }}</td>
+                                            <td>{{ $c->estacionamiento }}</td>
+                                            <td>{{ $c->bodega }}</td>
+                                            <td class="text-nowrap">
+                                                <a href="#" class="btn btn-sm btn-success mx-1 view-copropietario-details" data-copropietario-id="{{ $c->id }}" data-bs-toggle="modal" data-bs-target="#copropietarioDetailModal">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('copropietarios.edit', $c->id) }}" class="btn btn-sm btn-info mx-1">✏️</a>
+                                                <form action="{{ route('copropietarios.destroy', $c->id) }}" method="POST" style="display:inline-block;" class="mx-1">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('¿Eliminar este copropietario?')">🗑</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @if ($coownersPaginator->hasPages())
+                            <div class="d-flex justify-content-center p-3">
+                                {{ $coownersPaginator->appends(['buscar' => $buscar, 'dept_page' => $departmentsPaginator->currentPage()] + ['co_page' => request()->input('co_page', [])])->links() }}
+                            </div>
+                        @endif
+                    @elseif ($coownersPaginator && $coownersPaginator->isEmpty() && request('buscar'))
+                        <div class="card-body">
+                            <p class="text-center text-muted m-3">No se encontraron copropietarios que coincidan con su término de búsqueda en este departamento.</p>
+                        </div>
+                    @elseif ($coownersPaginator && $coownersPaginator->isEmpty())
+                        <div class="card-body">
+                            <p class="text-center text-muted m-3">No hay copropietarios registrados para este departamento.</p>
+                        </div>
+                    @else {{-- Should ideally not happen if controller guarantees $copropietariosData[$deptNum] for $deptNum in $departmentsPaginator --}}
+                        <div class="card-body">
+                            <p class="text-center text-muted m-3">No hay información de copropietarios disponible para este departamento.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+
+        @if ($departmentsPaginator->hasPages())
+            <div class="d-flex justify-content-center mt-4">
+                 {{ $departmentsPaginator->appends(['buscar' => $buscar] + ['co_page' => request()->input('co_page', [])])->links() }}
+            </div>
+        @endif
     @endif
 
-    <form action="{{ route('copropietarios.store') }}" method="POST">
-        @csrf
-        <div class="card mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Información del Departamento</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="numero_departamento" class="form-label">Número de Departamento</label>
-                        <input type="text" class="form-control" id="numero_departamento" name="numero_departamento" value="{{ old('numero_departamento') }}" required>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="estacionamiento" class="form-label">Estacionamiento</label>
-                        <input type="text" class="form-control" id="estacionamiento" name="estacionamiento" value="{{ old('estacionamiento') }}">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="bodega" class="form-label">Bodega</label>
-                        <input type="text" class="form-control" id="bodega" name="bodega" value="{{ old('bodega') }}">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="copropietarios-container">
-            <div class="card mb-3 copropietario-card">
-                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Datos del Copropietario</h5>
-                    <button type="button" class="btn btn-danger btn-sm remove-copropietario">Eliminar</button>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="copropietarios[0][nombre_completo]" class="form-label">Nombre Completo</label>
-                            <input type="text" class="form-control" name="copropietarios[0][nombre_completo]" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="copropietarios[0][tipo]" class="form-label">Tipo</label>
-                            <select class="form-select" name="copropietarios[0][tipo]">
-                                <option value="propietario">Propietario</option>
-                                <option value="arrendatario">Arrendatario</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="copropietarios[0][telefono]" class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" name="copropietarios[0][telefono]">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="copropietarios[0][correo]" class="form-label">Correo Electrónico</label>
-                            <input type="email" class="form-control" name="copropietarios[0][correo]">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label for="copropietarios[0][patente]" class="form-label">Patente</label>
-                            <input type="text" class="form-control" name="copropietarios[0][patente]">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <button type="button" id="add-copropietario" class="btn btn-primary mb-3">Agregar Otro Copropietario</button>
-
-        <div class="d-flex justify-content-end">
-            <a href="{{ route('copropietarios.index') }}" class="btn btn-secondary me-2">Cancelar</a>
-            <button type="submit" class="btn btn-success">Guardar</button>
-        </div>
-    </form>
+<!-- Modal -->
+<div class="modal fade" id="copropietarioDetailModal" tabindex="-1" aria-labelledby="copropietarioDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg"> <!-- modal-lg for wider modal -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="copropietarioDetailModalLabel">Detalles del Copropietario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Content will be injected here by JavaScript -->
+        <p>Cargando detalles...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
 </div>
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    let copropietarioIndex = 1;
-    document.getElementById('add-copropietario').addEventListener('click', function() {
-        const container = document.getElementById('copropietarios-container');
-        const newCard = document.createElement('div');
-        newCard.classList.add('card', 'mb-3', 'copropietario-card');
-        newCard.innerHTML = `
-            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Datos del Copropietario</h5>
-                <button type="button" class="btn btn-danger btn-sm remove-copropietario">Eliminar</button>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="copropietarios[${copropietarioIndex}][nombre_completo]" class="form-label">Nombre Completo</label>
-                        <input type="text" class="form-control" name="copropietarios[${copropietarioIndex}][nombre_completo]" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="copropietarios[${copropietarioIndex}][tipo]" class="form-label">Tipo</label>
-                        <select class="form-select" name="copropietarios[${copropietarioIndex}][tipo]">
-                            <option value="propietario">Propietario</option>
-                            <option value="arrendatario">Arrendatario</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="copropietarios[${copropietarioIndex}][telefono]" class="form-label">Teléfono</label>
-                        <input type="text" class="form-control" name="copropietarios[${copropietarioIndex}][telefono]">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="copropietarios[${copropietarioIndex}][correo]" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" name="copropietarios[${copropietarioIndex}][correo]">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="copropietarios[${copropietarioIndex}][patente]" class="form-label">Patente</label>
-                        <input type="text" class="form-control" name="copropietarios[${copropietarioIndex}][patente]">
-                    </div>
-                </div>
-            </div>
-        `;
-        container.appendChild(newCard);
-        copropietarioIndex++;
-    });
-
-    document.getElementById('copropietarios-container').addEventListener('click', function(e) {
-        if (e.target && e.target.classList.contains('remove-copropietario')) {
-            e.target.closest('.copropietario-card').remove();
-        }
-    });
-});
-</script>
-@endpush
 @endsection
+
