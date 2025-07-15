@@ -58,11 +58,12 @@ php artisan key:generate
 php artisan migrate
 ```
 
-## 👤 Usuario de prueba (opcional)
+## 👤 Usuario de prueba 
 
 ```txt
 📧 Email: publico@demo.com  
 🔐 Contraseña: demo1234
+🌎 Link: http://panel-apexcode.duckdns.org/
 ```
 
 ## ✨ Funcionalidades futuras
