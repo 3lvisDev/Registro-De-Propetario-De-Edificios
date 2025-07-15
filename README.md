@@ -16,21 +16,21 @@
 
 Este sistema fue desarrollado para gestionar fácilmente la información de los copropietarios de un edificio, permitiendo:
 
-- Registrar nuevos copropietarios con nombre, teléfono, correo, departamento, bodega y estacionamiento.
-- Buscar por nombre, patente, departamento y más.
-- Visualizar de forma ordenada la información por número de departamento.
-- Administrar usuarios autenticados (login).
-- Panel limpio, moderno y responsivo con Bootstrap.
+* Registrar nuevos copropietarios con nombre, teléfono, correo, departamento, bodega y estacionamiento.
+* Buscar por nombre, patente, departamento y más.
+* Visualizar de forma ordenada la información por número de departamento.
+* Administrar usuarios autenticados (login).
+* Panel limpio, moderno y responsivo con Bootstrap.
 
-## 🧰 Tecnologías Utilizadas
+## 🧠 Tecnologías Utilizadas
 
-- Laravel 10
-- PHP 8.4
-- MySQL/MariaDB
-- Bootstrap 5
-- Tailwind (opcional)
-- GitHub Actions (pendiente)
-- Nginx / Apache (según servidor)
+* Laravel 10
+* PHP 8.4
+* MySQL/MariaDB
+* Bootstrap 5
+* Tailwind (opcional)
+* GitHub Actions (pendiente)
+* Nginx / Apache (según servidor)
 
 ## 📷 Capturas de Pantalla
 
@@ -56,28 +56,32 @@ cp .env.example .env
 # Configurar base de datos
 php artisan key:generate
 php artisan migrate
+```
 
+## 👤 Usuario de prueba (opcional)
 
-👤 Usuario de prueba
-
+```txt
 Email: admin@example.com
 Contraseña: 12345678
+```
 
-✨ Funcionalidades futuras
- Módulo de administración de gastos comunes.
+## ✨ Funcionalidades futuras
 
- Historial de pagos por copropietario.
+* [ ] Módulo de administración de gastos comunes.
+* [ ] Historial de pagos por copropietario.
+* [ ] Panel con estadísticas y gráficos.
+* [ ] Exportación en PDF/Excel.
+* [ ] Soporte multi-edificio.
 
- Panel con estadísticas y gráficos.
+## 🧑‍💻 Autor
 
- Exportación en PDF/Excel.
+**Elvis Da Silva**
+📧 [xxelvisdsxx@gmail.com](mailto:xxelvisdsxx@gmail.com)
+🐙 [GitHub](https://github.com/3lvisDev)
 
- Soporte multi-edificio.
+## 📄 Licencia
 
-🧑‍💻 Autor
-Elvis Da Silva
-📧 xxelvisdsxx@gmail.com
-🐙 GitHub
+Este proyecto está bajo la licencia [MIT](https://opensource.org/licenses/MIT).
 
-📄 Licencia
-Este proyecto está bajo la licencia MIT.
+---
+
