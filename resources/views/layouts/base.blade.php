@@ -15,7 +15,7 @@
             <div>
                 <div class="text-center mb-4">
                     <a href="{{ route('dashboard') }}" class="d-block text-center">
-                        <img src="https://remotv.pro/uploads/mz.png" alt="Martín De Zamora"
+                        <img src="https://pleytv.com/uploads/mz.png" alt="Martín De Zamora"
                              class="img-fluid" style="max-width: 160px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
                     </a>
                 </div>
