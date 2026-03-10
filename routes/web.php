@@ -31,7 +31,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // CRUD completo para copropietarios
-    Route::resource('copropietarios', CopropietarioController::class);
+    // Aplicar rate limiting específicamente a la ruta de creación (store)
+    Route::post('copropietarios', [CopropietarioController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('copropietarios.store');
+    
+    // Resto de rutas del resource sin rate limiting adicional
+    Route::resource('copropietarios', CopropietarioController::class)->except(['store']);
     Route::get('/copropietarios/details/{copropietario}', [CopropietarioController::class, 'getDetails'])->name('copropietarios.getDetails');
 
     // Formulario dinámico por tipo (propietario o arrendatario)
@@ -47,12 +53,26 @@ Route::middleware('auth')->group(function () {
         return view('copropietarios.partials.autorizado', compact('index'));
     })->name('copropietarios.partial.autorizado');
 
-    // Rutas Personas Autorizadas (solo si necesitas acceso directo por CRUD)
-    Route::resource('personas-autorizadas', PersonaAutorizadaController::class);
+    // Rutas Personas Autorizadas
+    // Aplicar rate limiting específicamente a la ruta de creación (store)
+    Route::post('personas-autorizadas', [PersonaAutorizadaController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('personas-autorizadas.store');
+    
+    // Resto de rutas del resource sin rate limiting adicional
+    Route::resource('personas-autorizadas', PersonaAutorizadaController::class)->except(['store']);
 
     // Estado de DuckDNS
     Route::get('/estado-duckdns', function () {
-        $ip = trim(shell_exec("curl -s https://ipv4.icanhazip.com"));
+        // Obtener IP del servidor de forma segura usando variables de servidor
+        $ip = $_SERVER['SERVER_ADDR'] ?? 'No disponible';
+        
+        // Validar formato IP antes de usar
+        if ($ip !== 'No disponible' && !filter_var($ip, FILTER_VALIDATE_IP)) {
+            $ip = 'IP inválida';
+            \Log::warning('Formato de IP inválido detectado', ['ip' => $_SERVER['SERVER_ADDR'] ?? 'null']);
+        }
+        
         $estado = trim(file_get_contents(env('HOME') . '/duckdns/duck.log'));
         $hora = date("d-m-Y H:i:s", filemtime(env('HOME') . '/duckdns/duck.log'));
         return view('estado-duckdns', compact('ip', 'estado', 'hora'));

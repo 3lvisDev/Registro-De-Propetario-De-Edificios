@@ -34,30 +34,47 @@ document.addEventListener('DOMContentLoaded', function () {
                     return response.json();
                 })
                 .then(function(data) {
-                    // Populate modal with fetched data
-                    // Adjust formatting as needed
-                    var detailsHtml = '<dl class="row">'; // Using a definition list for nice formatting
-
-                    detailsHtml += '<dt class="col-sm-4">ID:</dt><dd class="col-sm-8">' + (data.id || 'N/A') + '</dd>';
-                    detailsHtml += '<dt class="col-sm-4">Nombre Completo:</dt><dd class="col-sm-8">' + (data.nombre_completo || 'N/A') + '</dd>';
-                    detailsHtml += '<dt class="col-sm-4">Teléfono:</dt><dd class="col-sm-8">' + (data.telefono || 'N/A') + '</dd>';
-                    detailsHtml += '<dt class="col-sm-4">Correo:</dt><dd class="col-sm-8">' + (data.correo || 'N/A') + '</dd>';
-                    detailsHtml += '<dt class="col-sm-4">Tipo:</dt><dd class="col-sm-8">' + (data.tipo ? data.tipo.charAt(0).toUpperCase() + data.tipo.slice(1) : 'N/A') + '</dd>';
-                    detailsHtml += '<dt class="col-sm-4">Patente:</dt><dd class="col-sm-8">' + (data.patente || 'N/A') + '</dd>';
-                    detailsHtml += '<dt class="col-sm-4">Nº Departamento:</dt><dd class="col-sm-8">' + (data.numero_departamento || 'N/A') + '</dd>';
-                    detailsHtml += '<dt class="col-sm-4">Estacionamiento:</dt><dd class="col-sm-8">' + (data.estacionamiento || 'N/A') + '</dd>';
-                    detailsHtml += '<dt class="col-sm-4">Bodega:</dt><dd class="col-sm-8">' + (data.bodega || 'N/A') + '</dd>';
+                    // Populate modal with fetched data using safe DOM manipulation
+                    // This prevents XSS by using textContent instead of innerHTML concatenation
+                    var dl = document.createElement('dl');
+                    dl.className = 'row';
                     
-                    // Timestamps if you want them
+                    // Helper function to safely add a field to the definition list
+                    function addField(label, value) {
+                        var dt = document.createElement('dt');
+                        dt.className = 'col-sm-4';
+                        dt.textContent = label + ':';
+                        
+                        var dd = document.createElement('dd');
+                        dd.className = 'col-sm-8';
+                        dd.textContent = value || 'N/A';
+                        
+                        dl.appendChild(dt);
+                        dl.appendChild(dd);
+                    }
+                    
+                    // Add all fields safely - textContent automatically escapes HTML
+                    addField('ID', data.id);
+                    addField('Nombre Completo', data.nombre_completo);
+                    addField('Teléfono', data.telefono);
+                    addField('Correo', data.correo);
+                    addField('Tipo', data.tipo ? data.tipo.charAt(0).toUpperCase() + data.tipo.slice(1) : null);
+                    addField('Patente', data.patente);
+                    addField('Nº Departamento', data.numero_departamento);
+                    addField('Estacionamiento', data.estacionamiento);
+                    addField('Bodega', data.bodega);
+                    
+                    // Timestamps if available
                     if (data.created_at) {
-                        detailsHtml += '<dt class="col-sm-4">Registrado el:</dt><dd class="col-sm-8">' + new Date(data.created_at).toLocaleString() + '</dd>';
+                        addField('Registrado el', new Date(data.created_at).toLocaleString());
                     }
                     if (data.updated_at) {
-                        detailsHtml += '<dt class="col-sm-4">Última Actualización:</dt><dd class="col-sm-8">' + new Date(data.updated_at).toLocaleString() + '</dd>';
+                        addField('Última Actualización', new Date(data.updated_at).toLocaleString());
                     }
                     
-                    detailsHtml += '</dl>';
-                    modalBody.innerHTML = detailsHtml;
+                    // Clear and append the safely constructed element
+                    modalBody.innerHTML = '';
+                    modalBody.appendChild(dl);
                     
                     // If not using data-bs-toggle attributes, show modal manually:
                     // detailModal.show(); 

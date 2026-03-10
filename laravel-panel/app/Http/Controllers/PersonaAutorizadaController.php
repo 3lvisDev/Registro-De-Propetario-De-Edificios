@@ -22,7 +22,7 @@ class PersonaAutorizadaController extends Controller
     {
         $request->validate([
             'nombre_completo' => 'required|string|max:100',
-            'rut_o_pasaporte' => 'required|string|max:20',
+            'rut_pasaporte' => 'required|string|max:20',
             'departamento' => 'required|string|max:10',
             'patente' => 'nullable|string|max:20',
         ]);

@@ -52,7 +52,15 @@ Route::middleware('auth')->group(function () {
 
     // Estado de DuckDNS
     Route::get('/estado-duckdns', function () {
-        $ip = trim(shell_exec("curl -s https://ipv4.icanhazip.com"));
+        // Obtener IP del servidor de forma segura usando variables de servidor
+        $ip = $_SERVER['SERVER_ADDR'] ?? 'No disponible';
+        
+        // Validar formato IP antes de usar
+        if ($ip !== 'No disponible' && !filter_var($ip, FILTER_VALIDATE_IP)) {
+            $ip = 'IP inválida';
+            \Log::warning('Formato de IP inválido detectado', ['ip' => $_SERVER['SERVER_ADDR'] ?? 'null']);
+        }
+        
         $estado = trim(file_get_contents(env('HOME') . '/duckdns/duck.log'));
         $hora = date("d-m-Y H:i:s", filemtime(env('HOME') . '/duckdns/duck.log'));
         return view('estado-duckdns', compact('ip', 'estado', 'hora'));

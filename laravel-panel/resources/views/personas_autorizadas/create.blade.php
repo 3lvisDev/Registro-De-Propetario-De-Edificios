@@ -29,7 +29,7 @@
 
         <div class="mb-3">
             <label>RUT o Pasaporte</label>
-            <input type="text" name="rut_o_pasaporte" class="form-control" required>
+            <input type="text" name="rut_pasaporte" class="form-control" required>
         </div>
 
         <div class="mb-3">

@@ -58,6 +58,51 @@ php artisan key:generate
 php artisan migrate
 ```
 
+## 📋 Convenciones de Nombres
+
+Este proyecto sigue las convenciones estándar de Laravel para mantener consistencia y facilitar el mantenimiento:
+
+### Nombres de Campos en Base de Datos
+* **snake_case** para todos los nombres de columnas
+* Ejemplos: `nombre_completo`, `numero_departamento`, `rut_pasaporte`
+
+### Nombres de Tablas
+* **Plural en snake_case**
+* Ejemplos: `copropietarios`, `persona_autorizadas`, `users`
+
+### Propiedades de Modelos
+* **snake_case** (Laravel convierte automáticamente desde la base de datos)
+* Acceso: `$copropietario->nombre_completo`
+
+### Métodos de Modelos
+* **camelCase** para métodos y relaciones
+* Ejemplos: `getNombreCompletoAttribute()`, `personasAutorizadas()`
+
+### Campos Estandarizados Importantes
+
+#### Campo `rut_pasaporte`
+Este campo fue estandarizado en toda la aplicación para identificar a personas autorizadas:
+* **Migración**: columna `rut_pasaporte`
+* **Modelo**: incluido en `$fillable` como `rut_pasaporte`
+* **Validación**: reglas definidas para `rut_pasaporte`
+* **Vistas**: formularios usan `name="rut_pasaporte"`
+
+#### Campo `numero_departamento`
+Identifica el departamento asociado a copropietarios:
+* Usado consistentemente en toda la aplicación
+* Tipo: string (permite formatos como "101", "A-5", etc.)
+
+### Campos Protegidos
+Los siguientes campos **NO** pueden ser asignados masivamente (protección contra mass assignment):
+* `id` - Clave primaria
+* `created_at` - Timestamp de creación
+* `updated_at` - Timestamp de actualización
+
+### Tipos de Copropietario
+El campo `tipo` acepta solo dos valores:
+* `"Propietario"` - Dueño legal del departamento
+* `"Arrendatario"` - Persona que arrienda el departamento
+
 ## 👤 Usuario de prueba 
 
 ```txt

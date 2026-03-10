@@ -30,7 +30,7 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $p->nombre_completo }}</td>
-                    <td>{{ $p->rut_o_pasaporte }}</td>
+                    <td>{{ $p->rut_pasaporte }}</td>
                     <td>{{ $p->departamento }}</td>
                     <td>{{ $p->patente }}</td>
                     <td>

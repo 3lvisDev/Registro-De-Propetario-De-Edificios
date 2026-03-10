@@ -11,7 +11,7 @@ class PersonaAutorizada extends Model
 
     protected $fillable = [
         'nombre_completo',
-        'rut_o_pasaporte',
+        'rut_pasaporte',
         'departamento',
         'patente',
     ];

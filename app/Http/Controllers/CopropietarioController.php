@@ -7,6 +7,7 @@ use App\Models\Copropietario;
 use App\Models\PersonaAutorizada;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Http\Requests\UpdateCopropietarioRequest;
 
 class CopropietarioController extends Controller
 {
@@ -60,7 +61,8 @@ class CopropietarioController extends Controller
 
         // Now, for each department in the current department page, get its co-owners
         foreach ($currentDepartmentSlice as $deptNum) {
-            $coownerQuery = Copropietario::where('numero_departamento', $deptNum);
+            $coownerQuery = Copropietario::with(['arrendatarios', 'personasAutorizadas'])
+                ->where('numero_departamento', $deptNum);
 
             // If buscar is active, we need to filter co-owners *within* this department.
             // However, if $buscar *is* $deptNum, we don't need to re-filter by $buscar,
@@ -126,6 +128,13 @@ class CopropietarioController extends Controller
             $nuevo->bodega = $request->bodega;
 
             if ($persona['tipo'] === 'arrendatario') {
+                // Validación de integridad referencial - Requisito 32.4
+                // Verificar que existe un propietario principal antes de asignar
+                if (!$propietarioPrincipalId) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['copropietarios' => 'Debe registrar un propietario antes de registrar arrendatarios.']);
+                }
                 $nuevo->propietario_id = $propietarioPrincipalId;
             }
 
@@ -138,6 +147,14 @@ class CopropietarioController extends Controller
 
         if ($request->has('autorizados')) {
             foreach ($request->autorizados as $autorizado) {
+                // Validación de integridad referencial - Requisito 32.5
+                // Verificar que existe un copropietario principal antes de crear persona autorizada
+                if (!$propietarioPrincipalId) {
+                    return redirect()->back()
+                        ->withInput()
+                        ->withErrors(['autorizados' => 'Debe registrar un copropietario antes de registrar personas autorizadas.']);
+                }
+
                 PersonaAutorizada::create([
                     'nombre_completo' => $autorizado['nombre_completo'],
                     'rut_pasaporte' => $autorizado['rut_pasaporte'],
@@ -159,20 +176,11 @@ class CopropietarioController extends Controller
         return view('copropietarios.edit', compact('copropietario', 'autorizados'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateCopropietarioRequest $request, $id)
     {
         $copropietario = Copropietario::findOrFail($id);
 
-        $copropietario->update([
-            'nombre_completo' => $request->nombre_completo,
-            'tipo' => $request->tipo,
-            'telefono' => $request->telefono,
-            'correo' => $request->correo,
-            'patente' => $request->patente,
-            'numero_departamento' => $request->numero_departamento,
-            'estacionamiento' => $request->estacionamiento,
-            'bodega' => $request->bodega,
-        ]);
+        $copropietario->update($request->validated());
 
         return redirect()->route('copropietarios.index')->with('success', 'Copropietario actualizado correctamente.');
     }
@@ -180,6 +188,27 @@ class CopropietarioController extends Controller
     public function destroy($id)
     {
         $copropietario = Copropietario::findOrFail($id);
+
+        // Validación de integridad referencial - Requisito 32.1
+        // Verificar si es un Propietario con Arrendatarios asociados
+        if ($copropietario->tipo === 'propietario') {
+            $arrendatariosCount = $copropietario->arrendatarios()->count();
+            
+            if ($arrendatariosCount > 0) {
+                return redirect()->route('copropietarios.index')
+                    ->with('error', "No se puede eliminar el propietario porque tiene {$arrendatariosCount} arrendatario(s) asociado(s). Elimine primero los arrendatarios o confirme la eliminación en cascada.");
+            }
+        }
+
+        // Validación de integridad referencial - Requisito 32.2
+        // Verificar si tiene Personas Autorizadas asociadas
+        $personasAutorizadasCount = $copropietario->personasAutorizadas()->count();
+        
+        if ($personasAutorizadasCount > 0) {
+            return redirect()->route('copropietarios.index')
+                ->with('warning', "El copropietario tiene {$personasAutorizadasCount} persona(s) autorizada(s) asociada(s). Al eliminarlo, también se eliminarán las personas autorizadas.");
+        }
+
         $copropietario->delete();
 
         return redirect()->route('copropietarios.index')->with('success', 'Copropietario eliminado correctamente.');
@@ -197,7 +226,17 @@ class CopropietarioController extends Controller
         // You can choose to load specific relations if needed, e.g.,
         // $copropietario->load('relationName');
 
-        return response()->json($copropietario);
+        // Escape HTML characters in JSON response to prevent XSS attacks (Requisito 27.3)
+        // JSON_HEX_TAG: Converts < and > to \u003C and \u003E
+        // JSON_HEX_AMP: Converts & to \u0026
+        // JSON_HEX_APOS: Converts ' to \u0027
+        // JSON_HEX_QUOT: Converts " to \u0022
+        return response()->json(
+            $copropietario,
+            200,
+            [],
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+        );
     }
 }
 

@@ -25,7 +25,7 @@
 
         <div class="mb-3">
             <label class="form-label">RUT o Pasaporte</label>
-            <input type="text" name="documento_identidad" class="form-control" required>
+            <input type="text" name="rut_pasaporte" class="form-control" required>
         </div>
 
         <div class="mb-3">
@@ -35,7 +35,7 @@
 
         <div class="mb-3">
             <label class="form-label">Patente del Vehículo</label>
-            <input type="text" name="patente_vehiculo" class="form-control">
+            <input type="text" name="patente" class="form-control">
         </div>
 
         <div class="mt-4 d-flex justify-content-between">

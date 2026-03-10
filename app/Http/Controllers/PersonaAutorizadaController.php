@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePersonaAutorizadaRequest;
 use App\Models\PersonaAutorizada;
 use Illuminate\Http\Request;
 
@@ -9,7 +10,9 @@ class PersonaAutorizadaController extends Controller
 {
     public function index()
     {
-        $personas = PersonaAutorizada::orderBy('created_at', 'desc')->get();
+        $personas = PersonaAutorizada::with('copropietario')
+            ->orderBy('created_at', 'desc')
+            ->get();
         return view('personas_autorizadas.index', compact('personas'));
     }
 
@@ -18,16 +21,9 @@ class PersonaAutorizadaController extends Controller
         return view('personas_autorizadas.create');
     }
 
-    public function store(Request $request)
+    public function store(StorePersonaAutorizadaRequest $request)
     {
-        $request->validate([
-            'nombre_completo' => 'required|string|max:100',
-            'rut_o_pasaporte' => 'required|string|max:20',
-            'departamento' => 'required|string|max:10',
-            'patente' => 'nullable|string|max:20',
-        ]);
-
-        PersonaAutorizada::create($request->all());
+        PersonaAutorizada::create($request->validated());
 
         return redirect()->route('personas-autorizadas.index')->with('success', 'Persona autorizada registrada correctamente.');
     }
