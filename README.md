@@ -58,6 +58,93 @@ php artisan key:generate
 php artisan migrate
 ```
 
+## 🔒 Configuración de Producción
+
+### Variables de Entorno Críticas
+
+Para un despliegue seguro en producción, asegúrate de configurar correctamente las siguientes variables en tu archivo `.env`:
+
+#### Seguridad Básica
+```env
+APP_ENV=production
+APP_DEBUG=false          # ⚠️ CRÍTICO: Debe estar en false en producción
+APP_KEY=                 # Generar con: php artisan key:generate
+```
+
+**⚠️ IMPORTANTE**: `APP_DEBUG=false` es crítico para seguridad. Cuando está en `true`, Laravel expone:
+- Stack traces completos con rutas del servidor
+- Información de la base de datos
+- Variables de entorno sensibles
+- Detalles internos de la aplicación
+
+#### Logging
+```env
+LOG_CHANNEL=daily        # Recomendado para producción
+LOG_LEVEL=error          # Solo errores en producción (no debug)
+```
+
+#### Base de Datos
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=nombre_base_datos
+DB_USERNAME=usuario_db
+DB_PASSWORD=contraseña_segura
+```
+
+### Páginas de Error Personalizadas
+
+El sistema incluye páginas de error personalizadas que:
+- **NO exponen** información técnica sensible
+- Muestran mensajes amigables en español
+- Proporcionan sugerencias útiles al usuario
+- Mantienen el diseño consistente del sistema
+
+Páginas disponibles:
+- `403` - Acceso Denegado
+- `404` - Página No Encontrada
+- `419` - Sesión Expirada (CSRF)
+- `429` - Demasiadas Solicitudes (Rate Limiting)
+- `500` - Error del Servidor
+
+### Logging de Errores
+
+El sistema registra automáticamente:
+- **Errores de base de datos**: Con detalles completos en logs (no visibles al usuario)
+- **Intentos de rate limiting**: IP, usuario, ruta, timestamp
+- **Errores de autorización**: Intentos de acceso no autorizado
+- **Excepciones no manejadas**: Stack trace completo en logs del servidor
+
+Los logs se almacenan en `storage/logs/` y se rotan diariamente en producción.
+
+### Checklist de Seguridad para Producción
+
+Antes de desplegar a producción, verifica:
+
+- [ ] `APP_DEBUG=false` en `.env`
+- [ ] `APP_ENV=production` en `.env`
+- [ ] Clave de aplicación generada (`APP_KEY`)
+- [ ] Permisos correctos en `storage/` y `bootstrap/cache/` (775)
+- [ ] HTTPS configurado (certificado SSL válido)
+- [ ] Rate limiting activo en rutas críticas
+- [ ] Logs configurados y rotando correctamente
+- [ ] Backups automáticos de base de datos configurados
+- [ ] Firewall configurado (solo puertos necesarios abiertos)
+- [ ] Variables de entorno sensibles no versionadas en Git
+
+### Manejo de Errores de Base de Datos
+
+El sistema maneja automáticamente errores de base de datos:
+- **Usuario ve**: Mensaje genérico amigable sin detalles técnicos
+- **Logs registran**: Error completo con query, bindings, y stack trace
+- **No se expone**: Nombres de tablas, estructura de BD, o queries SQL
+
+Ejemplo de mensaje al usuario:
+> "Ha ocurrido un error al procesar tu solicitud. Por favor, intenta nuevamente más tarde."
+
+Mientras que en logs se registra el error completo para debugging.
+
 ## 📋 Convenciones de Nombres
 
 Este proyecto sigue las convenciones estándar de Laravel para mantener consistencia y facilitar el mantenimiento:

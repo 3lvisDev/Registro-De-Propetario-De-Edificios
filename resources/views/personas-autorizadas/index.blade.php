@@ -19,6 +19,15 @@
     @if ($personasAutorizadas->isEmpty())
         <div class="alert alert-warning">No hay personas autorizadas registradas aún.</div>
     @else
+        {{-- Requisito 30.6: Mostrar información de paginación --}}
+        <div class="mb-3 text-muted">
+            <small>
+                Mostrando {{ $personasAutorizadas->firstItem() ?? 0 }} a {{ $personasAutorizadas->lastItem() ?? 0 }} 
+                de {{ $personasAutorizadas->total() }} resultados 
+                (Página {{ $personasAutorizadas->currentPage() }} de {{ $personasAutorizadas->lastPage() }})
+            </small>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-striped table-hover text-center">
                 <thead class="table-dark">
@@ -32,9 +41,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($personasAutorizadas as $index => $persona)
+                    @foreach ($personasAutorizadas as $persona)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ ($personasAutorizadas->currentPage() - 1) * $personasAutorizadas->perPage() + $loop->iteration }}</td>
                             <td>{{ $persona->nombre_completo }}</td>
                             <td>{{ $persona->rut_pasaporte }}</td>
                             <td>{{ $persona->departamento }}</td>
@@ -51,6 +60,13 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Requisito 30.4: Controles de navegación entre páginas --}}
+        @if ($personasAutorizadas->hasPages())
+            <div class="d-flex justify-content-center mt-4">
+                {{ $personasAutorizadas->links() }}
+            </div>
+        @endif
     @endif
 @endsection
 

@@ -12,7 +12,17 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Clean audit logs older than 90 days - Requisito 28.6
+        // Run daily at 2:00 AM
+        $schedule->command('audit:clean --days=90')
+            ->daily()
+            ->at('02:00')
+            ->onSuccess(function () {
+                \Log::info('Audit logs cleanup completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Audit logs cleanup failed');
+            });
     }
 
     /**

@@ -8,11 +8,15 @@ use App\Models\PersonaAutorizada;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Requests\UpdateCopropietarioRequest;
+use App\Helpers\AuditLogger;
 
 class CopropietarioController extends Controller
 {
     public function index(Request $request)
     {
+        // Verificar autorización - Requisito 23.1
+        $this->authorize('viewAny', Copropietario::class);
+        
         $buscar = $request->get('buscar');
         $dept_page = $request->get('dept_page', 1);
         $co_page = $request->input('co_page', []); // Ensure co_page is an array
@@ -93,11 +97,17 @@ class CopropietarioController extends Controller
 
     public function create()
     {
+        // Verificar autorización - Requisito 23.1
+        $this->authorize('create', Copropietario::class);
+        
         return view('copropietarios.create');
     }
 
     public function store(Request $request)
     {
+        // Verificar autorización - Requisito 23.1
+        $this->authorize('create', Copropietario::class);
+        
         $validated = $request->validate([
             'numero_departamento' => 'required|string|max:10',
             'estacionamiento' => 'nullable|string|max:50',
@@ -140,6 +150,13 @@ class CopropietarioController extends Controller
 
             $nuevo->save();
 
+            // Auditoría - Requisito 28.1
+            AuditLogger::logCreate(
+                Copropietario::class,
+                $nuevo->id,
+                $nuevo->toArray()
+            );
+
             if ($persona['tipo'] === 'propietario' && !$propietarioPrincipalId) {
                 $propietarioPrincipalId = $nuevo->id;
             }
@@ -171,6 +188,10 @@ class CopropietarioController extends Controller
     public function edit($id)
     {
         $copropietario = Copropietario::findOrFail($id);
+        
+        // Verificar autorización - Requisito 23.1
+        $this->authorize('update', $copropietario);
+        
         $autorizados = PersonaAutorizada::where('departamento', $copropietario->numero_departamento)->get();
 
         return view('copropietarios.edit', compact('copropietario', 'autorizados'));
@@ -179,8 +200,22 @@ class CopropietarioController extends Controller
     public function update(UpdateCopropietarioRequest $request, $id)
     {
         $copropietario = Copropietario::findOrFail($id);
+        
+        // Verificar autorización - Requisito 23.1
+        $this->authorize('update', $copropietario);
+
+        // Guardar valores antiguos para auditoría - Requisito 28.2
+        $oldValues = $copropietario->toArray();
 
         $copropietario->update($request->validated());
+
+        // Auditoría - Requisito 28.2
+        AuditLogger::logUpdate(
+            Copropietario::class,
+            $copropietario->id,
+            $oldValues,
+            $copropietario->toArray()
+        );
 
         return redirect()->route('copropietarios.index')->with('success', 'Copropietario actualizado correctamente.');
     }
@@ -188,6 +223,9 @@ class CopropietarioController extends Controller
     public function destroy($id)
     {
         $copropietario = Copropietario::findOrFail($id);
+        
+        // Verificar autorización - Requisito 23.2
+        $this->authorize('delete', $copropietario);
 
         // Validación de integridad referencial - Requisito 32.1
         // Verificar si es un Propietario con Arrendatarios asociados
@@ -209,7 +247,17 @@ class CopropietarioController extends Controller
                 ->with('warning', "El copropietario tiene {$personasAutorizadasCount} persona(s) autorizada(s) asociada(s). Al eliminarlo, también se eliminarán las personas autorizadas.");
         }
 
+        // Guardar valores para auditoría antes de eliminar - Requisito 28.3
+        $oldValues = $copropietario->toArray();
+
         $copropietario->delete();
+
+        // Auditoría - Requisito 28.3
+        AuditLogger::logDelete(
+            Copropietario::class,
+            $id,
+            $oldValues
+        );
 
         return redirect()->route('copropietarios.index')->with('success', 'Copropietario eliminado correctamente.');
     }
@@ -222,6 +270,9 @@ class CopropietarioController extends Controller
      */
     public function getDetails(Copropietario $copropietario)
     {
+        // Verificar autorización - Requisito 23.1
+        $this->authorize('view', $copropietario);
+        
         // The $copropietario model is already loaded by route model binding.
         // You can choose to load specific relations if needed, e.g.,
         // $copropietario->load('relationName');
