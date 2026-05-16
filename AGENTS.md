@@ -86,3 +86,8 @@ Every PR should include:
 - Do not expose tokens or credentials.
 - Do not delete files unless the reason is explicit.
 - Ask before making destructive changes.
+
+## Extended technical workflow
+
+- Follow docs/CODEX_TECHNICAL_WORKFLOW.md as the mandatory technical standard across all sessions.
+
