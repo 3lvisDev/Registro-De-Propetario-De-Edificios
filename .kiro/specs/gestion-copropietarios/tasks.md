@@ -473,7 +473,7 @@ El orden anterior tenía problemas donde tareas de fases posteriores eran más c
     - Test: AuditLogger formatea datos correctamente
     - _Requisitos: 28_
 
-- [-] 19. Checkpoint final - Validación completa
+- [ ] 19. Checkpoint final - Validación completa
   - Ejecutar suite completa de tests: `php artisan test`
   - Verificar cobertura de código (mínimo 80% en código crítico)
   - Ejecutar análisis estático con PHPStan o Psalm
