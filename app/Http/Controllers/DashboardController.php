@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Copropietario;
 
 class DashboardController extends Controller
@@ -12,9 +11,10 @@ class DashboardController extends Controller
         $total = Copropietario::count();
         $propietarios = Copropietario::where('tipo', 'propietario')->count();
         $arrendatarios = Copropietario::where('tipo', 'arrendatario')->count();
-        $departamentos = Copropietario::select('numero_departamento')->distinct()->count();
+        $departamentos = Copropietario::query()
+            ->distinct()
+            ->count('numero_departamento');
 
         return view('dashboard', compact('total', 'propietarios', 'arrendatarios', 'departamentos'));
     }
 }
-

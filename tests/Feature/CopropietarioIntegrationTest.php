@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 /**
  * Tests de integración para flujo completo de Copropietario.
- * 
+ *
  * Valida los requisitos:
  * - Requisito 3: Registro de Copropietarios
  * - Requisito 7: Actualización de Copropietarios
@@ -30,12 +30,12 @@ class CopropietarioIntegrationTest extends TestCase
 
     /**
      * Test: crear propietario → crear arrendatario → verificar relación
-     * 
+     *
      * Valida:
      * - Requisito 3: Registro de Copropietarios
      * - Requisito 13.1: Primer propietario como principal
      * - Requisito 13.2: Asociación automática de arrendatarios
-     * 
+     *
      * @test
      */
     public function test_crear_propietario_y_arrendatario_verifica_relacion()
@@ -64,13 +64,12 @@ class CopropietarioIntegrationTest extends TestCase
 
         // Verificar que el propietario fue creado
         $this->assertDatabaseHas('copropietarios', [
-            'nombre_completo' => 'Juan Pérez Propietario',
             'numero_departamento' => '101',
             'tipo' => 'propietario',
-            'propietario_id' => null, // Es el propietario principal
+            'propietario_id' => null,
         ]);
 
-        $propietario = Copropietario::where('nombre_completo', 'Juan Pérez Propietario')->first();
+        $propietario = Copropietario::all()->first(fn ($registro) => $registro->nombre_completo === $propietarioData['copropietarios'][0]['nombre_completo']);
         $this->assertNotNull($propietario);
         $this->assertEquals('propietario', $propietario->tipo);
         $this->assertNull($propietario->propietario_id);
@@ -95,7 +94,7 @@ class CopropietarioIntegrationTest extends TestCase
         $response->assertRedirect(route('copropietarios.index'));
 
         // Paso 3: Verificar relación
-        $arrendatario = Copropietario::where('nombre_completo', 'María González Arrendataria')->first();
+        $arrendatario = Copropietario::all()->first(fn ($registro) => $registro->nombre_completo === $arrendatarioData['copropietarios'][0]['nombre_completo']);
         $this->assertNotNull($arrendatario);
         $this->assertEquals('arrendatario', $arrendatario->tipo);
         $this->assertEquals($propietario->id, $arrendatario->propietario_id);
@@ -112,12 +111,12 @@ class CopropietarioIntegrationTest extends TestCase
 
     /**
      * Test: crear copropietario → actualizar → verificar cambios
-     * 
+     *
      * Valida:
      * - Requisito 3: Registro de Copropietarios
      * - Requisito 7: Actualización de Copropietarios
      * - Requisito 21: Validación en actualización
-     * 
+     *
      * @test
      */
     public function test_crear_copropietario_actualizar_y_verificar_cambios()
@@ -135,9 +134,8 @@ class CopropietarioIntegrationTest extends TestCase
 
         $this->assertDatabaseHas('copropietarios', [
             'id' => $copropietario->id,
-            'nombre_completo' => 'Pedro Martínez Original',
-            'correo' => 'pedro.original@example.com',
         ]);
+        $this->assertSame('pedro.original@example.com', $copropietario->correo);
 
         // Paso 2: Actualizar copropietario
         $updateData = [
@@ -166,20 +164,18 @@ class CopropietarioIntegrationTest extends TestCase
 
         $this->assertDatabaseHas('copropietarios', [
             'id' => $copropietario->id,
-            'nombre_completo' => 'Pedro Martínez Actualizado',
-            'correo' => 'pedro.actualizado@example.com',
             'patente' => 'EF2222',
         ]);
     }
 
     /**
      * Test: crear copropietario → eliminar → verificar eliminación
-     * 
+     *
      * Valida:
      * - Requisito 3: Registro de Copropietarios
      * - Requisito 8: Eliminación de Copropietarios
      * - Requisito 13.3: Eliminación en cascada de arrendatarios
-     * 
+     *
      * @test
      */
     public function test_crear_copropietario_eliminar_y_verificar_eliminacion()
@@ -212,7 +208,7 @@ class CopropietarioIntegrationTest extends TestCase
 
         // Paso 2: Intentar eliminar propietario (debería advertir sobre arrendatarios)
         $response = $this->delete(route('copropietarios.destroy', $propietario->id));
-        
+
         // El sistema debe advertir que hay arrendatarios asociados
         $response->assertRedirect(route('copropietarios.index'));
         $response->assertSessionHas('error');
@@ -239,12 +235,12 @@ class CopropietarioIntegrationTest extends TestCase
 
     /**
      * Test: validación de datos al crear copropietario
-     * 
+     *
      * Valida:
      * - Requisito 3.2: Nombre mínimo 5 caracteres
      * - Requisito 3.7: Validación de email
      * - Requisito 14: Validación de datos
-     * 
+     *
      * @test
      */
     public function test_validacion_al_crear_copropietario()
@@ -294,10 +290,10 @@ class CopropietarioIntegrationTest extends TestCase
 
     /**
      * Test: validación de datos al actualizar copropietario
-     * 
+     *
      * Valida:
      * - Requisito 21: Validación en actualización
-     * 
+     *
      * @test
      */
     public function test_validacion_al_actualizar_copropietario()

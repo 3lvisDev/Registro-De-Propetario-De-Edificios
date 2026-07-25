@@ -12,7 +12,10 @@ class LogRateLimitExceeded extends ThrottleRequests
         Log::warning('Rate limit exceeded', [
             'ip' => $request->ip(),
             'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
             'route' => $request->route()?->getName() ?? $request->path(),
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
             'timestamp' => now()->toIso8601String(),
         ]);
 

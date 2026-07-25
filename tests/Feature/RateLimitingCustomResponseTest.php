@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class RateLimitingCustomResponseTest extends TestCase
@@ -14,15 +13,13 @@ class RateLimitingCustomResponseTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Limpiar rate limiter antes de cada test
-        RateLimiter::clear('login');
+        $this->travel(61)->seconds();
     }
 
     /**
      * Test que verifica que la respuesta 429 incluye el header Retry-After
-     *
-     * @return void
      */
     public function test_rate_limit_response_includes_retry_after_header(): void
     {
@@ -40,10 +37,10 @@ class RateLimitingCustomResponseTest extends TestCase
 
         // La última solicitud debe retornar 429
         $this->assertEquals(429, $response->status());
-        
+
         // Verificar que incluye el header Retry-After
         $this->assertTrue($response->headers->has('Retry-After'));
-        
+
         // El valor debe ser un número (segundos)
         $retryAfter = $response->headers->get('Retry-After');
         $this->assertIsNumeric($retryAfter);
@@ -52,8 +49,6 @@ class RateLimitingCustomResponseTest extends TestCase
 
     /**
      * Test que verifica que la vista personalizada 429 se renderiza correctamente
-     *
-     * @return void
      */
     public function test_custom_429_view_is_rendered(): void
     {
@@ -75,8 +70,6 @@ class RateLimitingCustomResponseTest extends TestCase
 
     /**
      * Test que verifica el contenido de ayuda en la vista 429
-     *
-     * @return void
      */
     public function test_custom_429_view_includes_helpful_information(): void
     {
@@ -98,8 +91,6 @@ class RateLimitingCustomResponseTest extends TestCase
 
     /**
      * Test que verifica que después del tiempo de espera se puede volver a intentar
-     *
-     * @return void
      */
     public function test_can_retry_after_rate_limit_expires(): void
     {
@@ -119,14 +110,14 @@ class RateLimitingCustomResponseTest extends TestCase
         $this->assertEquals(429, $response->status());
 
         // Limpiar el rate limiter (simula que pasó el tiempo)
-        RateLimiter::clear('login');
+        $this->travel(61)->seconds();
 
         // Ahora debe permitir nuevas solicitudes
         $response = $this->post('/login', [
             'email' => 'wrong@example.com',
             'password' => 'wrongpassword',
         ]);
-        
+
         // No debe ser 429 (será 302 redirect o 422 validation error)
         $this->assertNotEquals(429, $response->status());
     }

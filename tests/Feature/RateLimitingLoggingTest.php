@@ -41,13 +41,14 @@ class RateLimitingLoggingTest extends TestCase
         // Hacer 11 peticiones para exceder el límite de 10 por minuto
         for ($i = 0; $i < 11; $i++) {
             $response = $this->post(route('copropietarios.store'), [
+                'numero_departamento' => '101',
                 'copropietarios' => [
                     [
-                        'nombre_completo' => 'Test Copropietario ' . $i,
+                        'nombre_completo' => 'Test Copropietario '.$i,
                         'numero_departamento' => 101,
                         'tipo' => 'Propietario',
-                    ]
-                ]
+                    ],
+                ],
             ]);
 
             // La última petición debe ser rechazada con 429
@@ -69,19 +70,20 @@ class RateLimitingLoggingTest extends TestCase
         Log::shouldReceive('warning')
             ->once()
             ->withArgs(function ($message, $context) {
-                return isset($context['ip']) && !empty($context['ip']);
+                return isset($context['ip']) && ! empty($context['ip']);
             });
 
         // Exceder el límite
         for ($i = 0; $i < 11; $i++) {
             $this->post(route('copropietarios.store'), [
+                'numero_departamento' => '101',
                 'copropietarios' => [
                     [
-                        'nombre_completo' => 'Test ' . $i,
+                        'nombre_completo' => 'Test '.$i,
                         'numero_departamento' => 101,
                         'tipo' => 'Propietario',
-                    ]
-                ]
+                    ],
+                ],
             ]);
         }
     }
@@ -93,7 +95,7 @@ class RateLimitingLoggingTest extends TestCase
     public function test_rate_limit_log_includes_user_info(): void
     {
         $user = User::factory()->create([
-            'email' => 'test@example.com'
+            'email' => 'test@example.com',
         ]);
         $this->actingAs($user);
 
@@ -109,13 +111,14 @@ class RateLimitingLoggingTest extends TestCase
         // Exceder el límite
         for ($i = 0; $i < 11; $i++) {
             $this->post(route('copropietarios.store'), [
+                'numero_departamento' => '101',
                 'copropietarios' => [
                     [
-                        'nombre_completo' => 'Test ' . $i,
+                        'nombre_completo' => 'Test '.$i,
                         'numero_departamento' => 101,
                         'tipo' => 'Propietario',
-                    ]
-                ]
+                    ],
+                ],
             ]);
         }
     }
@@ -142,13 +145,14 @@ class RateLimitingLoggingTest extends TestCase
         // Exceder el límite
         for ($i = 0; $i < 11; $i++) {
             $this->post(route('copropietarios.store'), [
+                'numero_departamento' => '101',
                 'copropietarios' => [
                     [
-                        'nombre_completo' => 'Test ' . $i,
+                        'nombre_completo' => 'Test '.$i,
                         'numero_departamento' => 101,
                         'tipo' => 'Propietario',
-                    ]
-                ]
+                    ],
+                ],
             ]);
         }
     }
@@ -165,19 +169,20 @@ class RateLimitingLoggingTest extends TestCase
         Log::shouldReceive('warning')
             ->once()
             ->withArgs(function ($message, $context) {
-                return isset($context['timestamp']) && !empty($context['timestamp']);
+                return isset($context['timestamp']) && ! empty($context['timestamp']);
             });
 
         // Exceder el límite
         for ($i = 0; $i < 11; $i++) {
             $this->post(route('copropietarios.store'), [
+                'numero_departamento' => '101',
                 'copropietarios' => [
                     [
-                        'nombre_completo' => 'Test ' . $i,
+                        'nombre_completo' => 'Test '.$i,
                         'numero_departamento' => 101,
                         'tipo' => 'Propietario',
-                    ]
-                ]
+                    ],
+                ],
             ]);
         }
     }
@@ -190,7 +195,7 @@ class RateLimitingLoggingTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'test@example.com',
-            'password' => bcrypt('password123')
+            'password' => bcrypt('password123'),
         ]);
 
         Log::shouldReceive('warning')
@@ -206,7 +211,7 @@ class RateLimitingLoggingTest extends TestCase
         for ($i = 0; $i < 6; $i++) {
             $response = $this->post(route('login'), [
                 'email' => 'test@example.com',
-                'password' => 'password123'
+                'password' => 'incorrecta',
             ]);
 
             // La última petición debe ser rechazada con 429
@@ -238,11 +243,11 @@ class RateLimitingLoggingTest extends TestCase
             $response = $this->post(route('personas-autorizadas.store'), [
                 'personas_autorizadas' => [
                     [
-                        'nombre_completo' => 'Test Persona ' . $i,
-                        'rut_pasaporte' => '12345678-' . $i,
+                        'nombre_completo' => 'Test Persona '.$i,
+                        'rut_pasaporte' => '12345678-'.$i,
                         'numero_departamento' => 101,
-                    ]
-                ]
+                    ],
+                ],
             ]);
 
             if ($i === 10) {

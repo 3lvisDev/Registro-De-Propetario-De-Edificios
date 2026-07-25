@@ -10,7 +10,7 @@ use Tests\TestCase;
 
 /**
  * Tests de integración para flujo completo de PersonaAutorizada.
- * 
+ *
  * Valida los requisitos:
  * - Requisito 4: Registro de Personas Autorizadas
  * - Requisito 10: Eliminación de Personas Autorizadas
@@ -29,13 +29,13 @@ class PersonaAutorizadaIntegrationTest extends TestCase
 
     /**
      * Test: crear copropietario → crear persona autorizada → verificar asociación
-     * 
+     *
      * Valida:
      * - Requisito 4: Registro de Personas Autorizadas
      * - Requisito 4.6: Asociación automática al propietario principal
      * - Requisito 29.3: Relación hasMany con PersonaAutorizada
      * - Requisito 29.4: Relación belongsTo con Copropietario
-     * 
+     *
      * @test
      */
     public function test_crear_copropietario_y_persona_autorizada_verifica_asociacion()
@@ -50,8 +50,7 @@ class PersonaAutorizadaIntegrationTest extends TestCase
 
         $this->assertDatabaseHas('copropietarios', [
             'id' => $propietario->id,
-            'nombre_completo' => 'Roberto Sánchez Propietario',
-            'tipo' => 'Propietario',
+            'tipo' => 'propietario',
         ]);
 
         // Paso 2: Crear persona autorizada asociada al propietario
@@ -68,7 +67,7 @@ class PersonaAutorizadaIntegrationTest extends TestCase
         $response->assertSessionHas('success');
 
         // Paso 3: Verificar asociación
-        $personaAutorizada = PersonaAutorizada::where('nombre_completo', 'Sofía Ramírez Autorizada')->first();
+        $personaAutorizada = PersonaAutorizada::all()->first(fn ($registro) => $registro->nombre_completo === $personaAutorizadaData['nombre_completo']);
         $this->assertNotNull($personaAutorizada);
         $this->assertEquals($propietario->id, $personaAutorizada->copropietario_id);
         $this->assertEquals('404', $personaAutorizada->departamento);
@@ -86,12 +85,12 @@ class PersonaAutorizadaIntegrationTest extends TestCase
 
     /**
      * Test: crear persona autorizada → eliminar → verificar eliminación
-     * 
+     *
      * Valida:
      * - Requisito 4: Registro de Personas Autorizadas
      * - Requisito 10: Eliminación de Personas Autorizadas
      * - Requisito 28.4: Auditoría de eliminación
-     * 
+     *
      * @test
      */
     public function test_crear_persona_autorizada_eliminar_y_verificar_eliminacion()
@@ -105,7 +104,6 @@ class PersonaAutorizadaIntegrationTest extends TestCase
         ]);
 
         $personaAutorizada = PersonaAutorizada::factory()->create([
-            'nombre_completo' => 'Miguel Ángel Fernández',
             'rut_pasaporte' => '98765432-1',
             'departamento' => '505',
             'copropietario_id' => $propietario->id,
@@ -114,7 +112,6 @@ class PersonaAutorizadaIntegrationTest extends TestCase
         // Verificar que fue creada
         $this->assertDatabaseHas('persona_autorizadas', [
             'id' => $personaAutorizada->id,
-            'nombre_completo' => 'Miguel Ángel Fernández',
             'copropietario_id' => $propietario->id,
         ]);
 
@@ -141,11 +138,11 @@ class PersonaAutorizadaIntegrationTest extends TestCase
 
     /**
      * Test: crear múltiples personas autorizadas para un copropietario
-     * 
+     *
      * Valida:
      * - Requisito 4.7: Registro múltiple de personas autorizadas
      * - Requisito 29.3: Relación hasMany
-     * 
+     *
      * @test
      */
     public function test_crear_multiples_personas_autorizadas_para_un_copropietario()
@@ -192,11 +189,11 @@ class PersonaAutorizadaIntegrationTest extends TestCase
 
     /**
      * Test: eliminación en cascada de personas autorizadas al eliminar copropietario
-     * 
+     *
      * Valida:
      * - Requisito 13.4: Eliminación en cascada de personas autorizadas
      * - Requisito 32.2: Validación de integridad referencial
-     * 
+     *
      * @test
      */
     public function test_eliminacion_cascada_personas_autorizadas_al_eliminar_copropietario()
@@ -226,14 +223,14 @@ class PersonaAutorizadaIntegrationTest extends TestCase
 
         // Paso 2: Eliminar propietario (debería advertir sobre personas autorizadas)
         $response = $this->delete(route('copropietarios.destroy', $propietario->id));
-        
+
         // El sistema debe advertir que hay personas autorizadas
         $response->assertRedirect(route('copropietarios.index'));
         $response->assertSessionHas('warning');
 
         // Verificar que el propietario NO fue eliminado (según implementación actual)
         $this->assertDatabaseHas('copropietarios', ['id' => $propietario->id]);
-        
+
         // Las personas autorizadas tampoco deberían ser eliminadas aún
         $this->assertDatabaseHas('persona_autorizadas', ['id' => $persona1->id]);
         $this->assertDatabaseHas('persona_autorizadas', ['id' => $persona2->id]);
@@ -241,12 +238,12 @@ class PersonaAutorizadaIntegrationTest extends TestCase
 
     /**
      * Test: validación de datos al crear persona autorizada
-     * 
+     *
      * Valida:
      * - Requisito 4.2: Nombre mínimo 3 caracteres
      * - Requisito 4.3: RUT o pasaporte requerido
      * - Requisito 14: Validación de datos
-     * 
+     *
      * @test
      */
     public function test_validacion_al_crear_persona_autorizada()
@@ -286,10 +283,10 @@ class PersonaAutorizadaIntegrationTest extends TestCase
 
     /**
      * Test: validación de integridad referencial al crear persona autorizada
-     * 
+     *
      * Valida:
      * - Requisito 32.5: Validación de copropietario_id existente
-     * 
+     *
      * @test
      */
     public function test_validacion_integridad_referencial_copropietario_id()

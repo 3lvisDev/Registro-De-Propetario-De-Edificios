@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCopropietarioRequest extends FormRequest
@@ -17,7 +18,7 @@ class UpdateCopropietarioRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -62,7 +63,7 @@ class UpdateCopropietarioRequest extends FormRequest
 
     /**
      * Preparar datos para validación - Sanitización de entradas
-     * 
+     *
      * Requisito 27.4: Sanitizar entradas antes de almacenar
      * Remueve tags HTML y scripts para prevenir XSS
      */
@@ -70,6 +71,7 @@ class UpdateCopropietarioRequest extends FormRequest
     {
         $this->merge([
             'nombre_completo' => $this->sanitize($this->nombre_completo),
+            'tipo' => mb_strtolower($this->sanitize($this->tipo)),
             'telefono' => $this->sanitize($this->telefono),
             'correo' => $this->sanitize($this->correo),
             'patente' => $this->sanitize($this->patente),

@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 /**
  * Tests de integración para Dashboard.
- * 
+ *
  * Valida los requisitos:
  * - Requisito 2: Visualización del Dashboard
  */
@@ -27,13 +27,13 @@ class DashboardIntegrationTest extends TestCase
 
     /**
      * Test: crear copropietarios de diferentes tipos → verificar estadísticas
-     * 
+     *
      * Valida:
      * - Requisito 2.1: Total de copropietarios registrados
      * - Requisito 2.2: Total de propietarios
      * - Requisito 2.3: Total de arrendatarios
      * - Requisito 2.4: Total de departamentos únicos
-     * 
+     *
      * @test
      */
     public function test_dashboard_muestra_estadisticas_correctas()
@@ -110,11 +110,11 @@ class DashboardIntegrationTest extends TestCase
 
     /**
      * Test: dashboard con múltiples arrendatarios por propietario
-     * 
+     *
      * Valida:
      * - Requisito 2: Visualización del Dashboard
      * - Conteo correcto cuando hay múltiples arrendatarios
-     * 
+     *
      * @test
      */
     public function test_dashboard_con_multiples_arrendatarios_por_propietario()
@@ -147,11 +147,11 @@ class DashboardIntegrationTest extends TestCase
 
     /**
      * Test: dashboard después de eliminar copropietarios
-     * 
+     *
      * Valida:
      * - Requisito 2: Visualización del Dashboard
      * - Actualización correcta de estadísticas después de eliminaciones
-     * 
+     *
      * @test
      */
     public function test_dashboard_actualiza_estadisticas_despues_de_eliminaciones()
@@ -202,11 +202,11 @@ class DashboardIntegrationTest extends TestCase
 
     /**
      * Test: dashboard con departamentos duplicados
-     * 
+     *
      * Valida:
      * - Requisito 2.4: Total de departamentos únicos
      * - Conteo correcto de departamentos distintos
-     * 
+     *
      * @test
      */
     public function test_dashboard_cuenta_departamentos_unicos_correctamente()
@@ -235,10 +235,10 @@ class DashboardIntegrationTest extends TestCase
 
     /**
      * Test: dashboard requiere autenticación
-     * 
+     *
      * Valida:
      * - Requisito 17.1: Protección de rutas
-     * 
+     *
      * @test
      */
     public function test_dashboard_requiere_autenticacion()
@@ -250,11 +250,11 @@ class DashboardIntegrationTest extends TestCase
 
     /**
      * Test: dashboard muestra vista correcta
-     * 
+     *
      * Valida:
      * - Requisito 2: Visualización del Dashboard
      * - Requisito 15: Interfaz de usuario con AdminLTE
-     * 
+     *
      * @test
      */
     public function test_dashboard_muestra_vista_correcta()
@@ -270,18 +270,18 @@ class DashboardIntegrationTest extends TestCase
         $response = $this->get(route('dashboard'));
         $response->assertStatus(200);
         $response->assertViewIs('dashboard');
-        
+
         // Verificar que se pasan las variables correctas a la vista
         $response->assertViewHasAll(['total', 'propietarios', 'arrendatarios', 'departamentos']);
     }
 
     /**
      * Test: dashboard con datos de gran volumen
-     * 
+     *
      * Valida:
      * - Requisito 2: Visualización del Dashboard
      * - Rendimiento con múltiples registros
-     * 
+     *
      * @test
      */
     public function test_dashboard_con_gran_volumen_de_datos()
@@ -291,12 +291,12 @@ class DashboardIntegrationTest extends TestCase
         // Crear 50 propietarios en diferentes departamentos
         for ($i = 1; $i <= 50; $i++) {
             Copropietario::factory()->propietario()->create([
-                'numero_departamento' => (string)(100 + $i),
+                'numero_departamento' => (string) (100 + $i),
             ]);
         }
 
         // Crear 30 arrendatarios
-        $propietarios = Copropietario::where('tipo', 'Propietario')->limit(30)->get();
+        $propietarios = Copropietario::where('tipo', 'propietario')->limit(30)->get();
         foreach ($propietarios as $propietario) {
             Copropietario::factory()->arrendatario()->create([
                 'numero_departamento' => $propietario->numero_departamento,
