@@ -118,18 +118,27 @@
 
 <!-- Modal -->
 <div class="modal fade" id="copropietarioDetailModal" tabindex="-1" aria-labelledby="copropietarioDetailModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg"> <!-- modal-lg for wider modal -->
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="copropietarioDetailModalLabel">Detalles del Copropietario</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content copropietario-detail-modal">
+      <div class="modal-header copropietario-detail-header">
+        <div class="d-flex align-items-center gap-3">
+          <span class="copropietario-detail-header-icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+          <div>
+            <p class="copropietario-detail-eyebrow mb-1">Ficha del residente</p>
+            <h5 class="modal-title" id="copropietarioDetailModalLabel">Detalles del Copropietario</h5>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body copropietario-detail-body">
         <!-- Content will be injected here by JavaScript -->
-        <p>Cargando detalles...</p>
+        <div class="copropietario-detail-loading" role="status">
+          <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span>Cargando detalles...</span>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      <div class="modal-footer copropietario-detail-footer">
+        <button type="button" class="btn btn-dark px-4" data-bs-dismiss="modal">Cerrar</button>
       </div>
     </div>
   </div>
