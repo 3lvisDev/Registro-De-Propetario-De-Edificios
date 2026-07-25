@@ -17,7 +17,7 @@
             <label class="form-label" for="password">Nueva contraseña</label>
             <input class="form-control @error('password') is-invalid @enderror" id="password"
                 type="password" name="password" aria-describedby="passwordHelp">
-            <div id="passwordHelp" class="form-text">Déjela vacía para mantener la contraseña actual.</div>
+            <div id="passwordHelp" class="form-text">Déjela vacía para mantenerla. Si la cambia, use al menos 12 caracteres, mayúscula, minúscula, número y símbolo.</div>
             @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="mb-3">

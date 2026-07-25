@@ -16,6 +16,7 @@
             <label class="form-label" for="password">Contraseña</label>
             <input class="form-control @error('password') is-invalid @enderror" id="password"
                 type="password" name="password" required>
+            <div class="form-text">Mínimo 12 caracteres, con mayúscula, minúscula, número y símbolo.</div>
             @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
         <div class="mb-3">

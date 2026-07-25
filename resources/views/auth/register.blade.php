@@ -16,6 +16,9 @@
             <x-input-label for="password" value="Contraseña" />
             <x-text-input id="password" class="block mt-1 w-full" type="password" name="password"
                 required autocomplete="new-password" />
+            <p class="mt-2 text-sm text-gray-600">
+                Use al menos 12 caracteres, una mayúscula, una minúscula, un número y un símbolo.
+            </p>
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
