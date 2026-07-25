@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('Modal element #copropietarioDetailModal not found.');
         return;
     }
-    var detailModal = new bootstrap.Modal(detailModalElement); // Ensure Bootstrap's Modal class is available
-
     // Using event delegation for dynamically potentially loaded content (though not strictly necessary here as it's server-rendered)
     // More robust if content were to be refreshed via AJAX without a full page reload.
     document.body.addEventListener('click', function(event) {
@@ -17,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
             event.preventDefault(); // Prevent default anchor action
 
             var copropietarioId = viewButton.dataset.copropietarioId;
+            var detailsUrl = viewButton.dataset.detailsUrl;
             var modalBody = detailModalElement.querySelector('.modal-body');
             
             // Set loading state in modal
@@ -26,7 +25,12 @@ document.addEventListener('DOMContentLoaded', function () {
             // Bootstrap's data attributes will handle the showing.
 
             // AJAX request to fetch copropietario details
-            fetch('/copropietarios/details/' + copropietarioId)
+            fetch(detailsUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
                 .then(function(response) {
                     if (!response.ok) {
                         throw new Error('Network response was not ok: ' + response.statusText);
@@ -76,14 +80,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     modalBody.innerHTML = '';
                     modalBody.appendChild(dl);
                     
-                    // If not using data-bs-toggle attributes, show modal manually:
-                    // detailModal.show(); 
                 })
                 .catch(function(error) {
                     console.error('Error fetching copropietario details:', error);
                     modalBody.innerHTML = '<p class="text-danger">Error al cargar los detalles. Por favor, intente de nuevo.</p>';
-                    // If not using data-bs-toggle attributes, show modal manually to display error:
-                    // detailModal.show();
                 });
         }
     });

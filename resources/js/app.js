@@ -1,6 +1,7 @@
 import './bootstrap';
 import 'bootstrap';
 import '@fortawesome/fontawesome-free/js/all';
+import './copropietario-details-modal';
 
 import Alpine from 'alpinejs';
 

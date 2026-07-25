@@ -65,9 +65,15 @@
                                             <td>{{ $c->estacionamiento }}</td>
                                             <td>{{ $c->bodega }}</td>
                                             <td class="text-nowrap">
-                                                <a href="#" class="btn btn-sm btn-success mx-1 view-copropietario-details" data-copropietario-id="{{ $c->id }}" data-bs-toggle="modal" data-bs-target="#copropietarioDetailModal">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-success mx-1 view-copropietario-details"
+                                                    data-copropietario-id="{{ $c->id }}"
+                                                    data-details-url="{{ route('copropietarios.getDetails', $c) }}"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#copropietarioDetailModal"
+                                                    aria-label="Ver detalles de {{ $c->nombre_completo }}">
                                                     <i class="fas fa-eye"></i>
-                                                </a>
+                                                </button>
                                                 <a href="{{ route('copropietarios.edit', $c->id) }}" class="btn btn-sm btn-info mx-1">✏️</a>
                                                 <form action="{{ route('copropietarios.destroy', $c->id) }}" method="POST" style="display:inline-block;" class="mx-1">
                                                     @csrf
