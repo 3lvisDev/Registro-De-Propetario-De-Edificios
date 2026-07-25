@@ -21,6 +21,8 @@ class AuditLog extends Model
      */
     public $timestamps = false;
 
+    protected $dateFormat = 'Y-m-d H:i:s.u';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -44,8 +46,8 @@ class AuditLog extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'old_values' => 'array',
-        'new_values' => 'array',
+        'old_values' => 'encrypted:array',
+        'new_values' => 'encrypted:array',
         'created_at' => 'datetime',
     ];
 

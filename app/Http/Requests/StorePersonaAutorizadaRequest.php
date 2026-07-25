@@ -58,13 +58,20 @@ class StorePersonaAutorizadaRequest extends FormRequest
      * Requisito 27.4: Sanitizar entradas antes de almacenar
      * Remueve tags HTML y scripts para prevenir XSS
      */
-    protected function prepareForValidation(): void
+    public function prepareForValidation(): void
     {
         $this->merge([
-            'nombre_completo' => strip_tags($this->nombre_completo ?? ''),
-            'rut_pasaporte' => strip_tags($this->rut_pasaporte ?? ''),
-            'departamento' => strip_tags($this->departamento ?? ''),
-            'patente' => strip_tags($this->patente ?? ''),
+            'nombre_completo' => $this->sanitize($this->nombre_completo),
+            'rut_pasaporte' => $this->sanitize($this->rut_pasaporte),
+            'departamento' => $this->sanitize($this->departamento),
+            'patente' => $this->sanitize($this->patente),
         ]);
+    }
+
+    private function sanitize(?string $value): string
+    {
+        $withoutScripts = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $value ?? '');
+
+        return trim(strip_tags($withoutScripts ?? ''));
     }
 }

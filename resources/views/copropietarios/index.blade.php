@@ -17,7 +17,7 @@
 
     @if ($departmentsPaginator->isEmpty() && request('buscar'))
         <div class="alert alert-warning text-center" role="alert">
-            <h5>No se encontraron departamentos ni copropietarios que coincidan con su término de búsqueda: "{{ request('buscar') }}"</h5>
+            <h5>No se encontraron resultados para: "{{ request('buscar') }}"</h5>
         </div>
     @elseif ($departmentsPaginator->isEmpty())
         <div class="alert alert-info text-center" role="alert">
@@ -129,4 +129,3 @@
   </div>
 </div>
 @endsection
-

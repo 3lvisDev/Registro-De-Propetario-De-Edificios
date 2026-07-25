@@ -43,10 +43,12 @@ Route::middleware('auth')->group(function () {
     Route::post('copropietarios', [CopropietarioController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('copropietarios.store');
+
+    Route::get('/copropietarios/{copropietario}/details', [CopropietarioController::class, 'getDetails'])
+        ->name('copropietarios.getDetails');
     
     // Resto de rutas del resource sin rate limiting adicional
     Route::resource('copropietarios', CopropietarioController::class)->except(['store']);
-    Route::get('/copropietarios/details/{copropietario}', [CopropietarioController::class, 'getDetails'])->name('copropietarios.getDetails');
 
     // Formulario dinámico por tipo (propietario o arrendatario)
     Route::get('/copropietarios/partials/persona', function () {

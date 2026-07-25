@@ -1,4 +1,4 @@
-@extends('layouts.adminlte')
+@extends('layouts.base')
 
 @section('title', 'Crear usuario')
 

@@ -2,56 +2,66 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title', 'Panel')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Registro de Propietarios')</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-light">
-
     <div class="d-flex">
-        <!-- Sidebar -->
-        <aside class="bg-dark text-white vh-100 d-flex flex-column justify-content-between p-3" style="width: 230px;">
+        <aside class="bg-dark text-white vh-100 d-flex flex-column justify-content-between p-3 position-sticky top-0"
+               style="width: 240px; min-width: 240px;">
             <div>
-                <div class="text-center mb-4">
-                    <a href="{{ route('dashboard') }}" class="d-block text-center">
-                        <img src="https://pleytv.com/uploads/mz.png" alt="Martín De Zamora"
-                             class="img-fluid" style="max-width: 160px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));">
-                    </a>
-                </div>
+                <a href="{{ route('dashboard') }}" class="d-block text-center text-white text-decoration-none mb-4">
+                    <i class="fas fa-building fa-3x mb-2"></i>
+                    <div class="fw-semibold">Registro del Edificio</div>
+                </a>
 
                 <ul class="nav nav-pills flex-column">
                     <li class="nav-item mb-2">
-                        <a href="{{ route('dashboard') }}" class="nav-link text-white {{ request()->routeIs('dashboard') ? 'active bg-primary' : '' }}">
+                        <a href="{{ route('dashboard') }}"
+                           class="nav-link text-white {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                             <i class="fas fa-home me-2"></i>Inicio
                         </a>
                     </li>
                     <li class="nav-item mb-2">
-                        <a href="{{ route('copropietarios.index') }}" class="nav-link text-white {{ request()->routeIs('copropietarios.*') ? 'active bg-primary' : '' }}">
+                        <a href="{{ route('copropietarios.index') }}"
+                           class="nav-link text-white {{ request()->routeIs('copropietarios.*') ? 'active' : '' }}">
                             <i class="fas fa-users me-2"></i>Copropietarios
                         </a>
                     </li>
+                    <li class="nav-item mb-2">
+                        <a href="{{ route('personas-autorizadas.index') }}"
+                           class="nav-link text-white {{ request()->routeIs('personas-autorizadas.*') ? 'active' : '' }}">
+                            <i class="fas fa-id-card me-2"></i>Autorizados
+                        </a>
+                    </li>
+                    @if (Auth::user()->isAdmin())
+                        <li class="nav-item mb-2">
+                            <a href="{{ route('admin.users.index') }}"
+                               class="nav-link text-white {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                <i class="fas fa-user-shield me-2"></i>Usuarios
+                            </a>
+                        </li>
+                    @endif
                 </ul>
             </div>
 
-            <div class="mt-5">
+            <div>
+                <div class="small text-secondary text-center mb-2">{{ Auth::user()->email }}</div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button class="btn btn-outline-light w-100" onclick="return confirm('¿Cerrar sesión?')">
-                        <i class="fas fa-sign-out-alt me-2"></i>Salir
+                    <button class="btn btn-outline-light w-100" type="submit">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
                     </button>
                 </form>
             </div>
         </aside>
 
-        <!-- Contenido principal -->
-        <main class="flex-grow-1 p-4">
+        <main class="flex-grow-1 p-4 overflow-auto" style="min-height: 100vh;">
             @yield('content')
         </main>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 </body>
 </html>
-

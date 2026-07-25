@@ -9,6 +9,8 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Requests\UpdateCopropietarioRequest;
 use App\Helpers\AuditLogger;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CopropietarioController extends Controller
 {
@@ -24,32 +26,29 @@ class CopropietarioController extends Controller
         $departmentsPerPage = 3;
         $coownersPerPage = 10;
 
-        $allDepartmentNumbersQuery = Copropietario::query();
         $copropietariosData = [];
+        $matchingIds = collect();
 
         if ($buscar) {
-            // Apply search to the base query to find relevant co-owners
-            $allDepartmentNumbersQuery->where(function ($q) use ($buscar) {
-                $q->where('nombre_completo', 'like', "%$buscar%")
-                    ->orWhere('telefono', 'like', "%$buscar%")
-                    ->orWhere('correo', 'like', "%$buscar%")
-                    ->orWhere('patente', 'like', "%$buscar%")
-                    ->orWhere('estacionamiento', 'like', "%$buscar%")
-                    ->orWhere('bodega', 'like', "%$buscar%");
-                if (is_numeric($buscar)) {
-                    $q->orWhere('numero_departamento', '=', $buscar);
-                } else {
-                    // Allow searching for non-numeric department numbers if they exist as strings
-                    $q->orWhere('numero_departamento', 'like', "%$buscar%");
-                }
-            });
-        }
+            // Los campos personales están cifrados y no se pueden consultar con LIKE.
+            // En una instalación local, se descifran y filtran en memoria.
+            $matchingRecords = Copropietario::all()->filter(
+                fn (Copropietario $copropietario) => $this->matchesSearch($copropietario, $buscar)
+            );
 
-        // Get the list of department numbers that are relevant after applying the search
-        $relevantDepartmentNumbers = $allDepartmentNumbersQuery->select('numero_departamento')
-                                    ->distinct()
-                                    ->orderBy('numero_departamento')
-                                    ->pluck('numero_departamento');
+            $matchingIds = $matchingRecords->pluck('id');
+            $relevantDepartmentNumbers = $matchingRecords
+                ->pluck('numero_departamento')
+                ->unique()
+                ->sort()
+                ->values();
+        } else {
+            $relevantDepartmentNumbers = Copropietario::query()
+                ->select('numero_departamento')
+                ->distinct()
+                ->orderBy('numero_departamento')
+                ->pluck('numero_departamento');
+        }
 
         // Create the outer paginator for departments
         $currentPageDept = Paginator::resolveCurrentPage('dept_page');
@@ -72,18 +71,12 @@ class CopropietarioController extends Controller
             // However, if $buscar *is* $deptNum, we don't need to re-filter by $buscar,
             // as we want all co-owners of that specific department.
             if ($buscar && strval($deptNum) !== strval($buscar)) { // ensure string comparison
-                 $coownerQuery->where(function ($q) use ($buscar) {
-                    $q->where('nombre_completo', 'like', "%$buscar%")
-                        ->orWhere('telefono', 'like', "%$buscar%")
-                        ->orWhere('correo', 'like', "%$buscar%")
-                        ->orWhere('patente', 'like', "%$buscar%")
-                        ->orWhere('estacionamiento', 'like', "%$buscar%")
-                        ->orWhere('bodega', 'like', "%$buscar%");
-                    // No need to check for numero_departamento here again as it's already $deptNum
-                });
+                $coownerQuery->whereIn('id', $matchingIds);
             }
             
-            $coownerQuery->orderBy('tipo'); // Order co-owners by type
+            $coownerQuery
+                ->orderByRaw("CASE WHEN tipo = 'propietario' THEN 0 ELSE 1 END")
+                ->orderBy('id');
 
             // Ensure co_page value for this deptNum is an integer
             $currentCoPageForDept = isset($co_page[$deptNum]) ? (int)$co_page[$deptNum] : 1;
@@ -93,6 +86,27 @@ class CopropietarioController extends Controller
         }
 
         return view('copropietarios.index', compact('departmentsPaginator', 'copropietariosData', 'buscar', 'co_page'));
+    }
+
+    private function matchesSearch(Copropietario $copropietario, string $search): bool
+    {
+        $needle = Str::lower(trim($search));
+
+        foreach ([
+            $copropietario->nombre_completo,
+            $copropietario->telefono,
+            $copropietario->correo,
+            $copropietario->patente,
+            $copropietario->estacionamiento,
+            $copropietario->bodega,
+            $copropietario->numero_departamento,
+        ] as $value) {
+            if ($value !== null && Str::contains(Str::lower((string) $value), $needle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function create()
@@ -124,63 +138,48 @@ class CopropietarioController extends Controller
             'autorizados.*.patente' => 'nullable|string|max:20',
         ]);
 
-        $propietarioPrincipalId = null;
-
-        foreach ($request->copropietarios as $persona) {
-            $nuevo = new Copropietario();
-            $nuevo->nombre_completo = $persona['nombre_completo'];
-            $nuevo->telefono = $persona['telefono'];
-            $nuevo->correo = $persona['correo'];
-            $nuevo->tipo = $persona['tipo'];
-            $nuevo->patente = $persona['patente'];
-            $nuevo->numero_departamento = $request->numero_departamento;
-            $nuevo->estacionamiento = $request->estacionamiento;
-            $nuevo->bodega = $request->bodega;
-
-            if ($persona['tipo'] === 'arrendatario') {
-                // Validación de integridad referencial - Requisito 32.4
-                // Verificar que existe un propietario principal antes de asignar
-                if (!$propietarioPrincipalId) {
-                    return redirect()->back()
-                        ->withInput()
-                        ->withErrors(['copropietarios' => 'Debe registrar un propietario antes de registrar arrendatarios.']);
-                }
-                $nuevo->propietario_id = $propietarioPrincipalId;
-            }
-
-            $nuevo->save();
-
-            // Auditoría - Requisito 28.1
-            AuditLogger::logCreate(
-                Copropietario::class,
-                $nuevo->id,
-                $nuevo->toArray()
-            );
-
-            if ($persona['tipo'] === 'propietario' && !$propietarioPrincipalId) {
-                $propietarioPrincipalId = $nuevo->id;
-            }
+        $personas = collect($validated['copropietarios']);
+        if (! $personas->contains(fn (array $persona) => $persona['tipo'] === 'propietario')) {
+            return back()->withInput()->withErrors([
+                'copropietarios' => 'Debe registrar al menos un propietario.',
+            ]);
         }
 
-        if ($request->has('autorizados')) {
-            foreach ($request->autorizados as $autorizado) {
-                // Validación de integridad referencial - Requisito 32.5
-                // Verificar que existe un copropietario principal antes de crear persona autorizada
-                if (!$propietarioPrincipalId) {
-                    return redirect()->back()
-                        ->withInput()
-                        ->withErrors(['autorizados' => 'Debe registrar un copropietario antes de registrar personas autorizadas.']);
-                }
+        DB::transaction(function () use ($validated): void {
+            $propietarioPrincipalId = null;
+            $personasOrdenadas = collect($validated['copropietarios'])
+                ->sortBy(fn (array $persona) => $persona['tipo'] === 'propietario' ? 0 : 1);
 
+            foreach ($personasOrdenadas as $persona) {
+                $nuevo = Copropietario::create([
+                    'nombre_completo' => $persona['nombre_completo'],
+                    'telefono' => $persona['telefono'] ?? null,
+                    'correo' => $persona['correo'] ?? null,
+                    'tipo' => $persona['tipo'],
+                    'patente' => $persona['patente'] ?? null,
+                    'numero_departamento' => $validated['numero_departamento'],
+                    'estacionamiento' => $validated['estacionamiento'] ?? null,
+                    'bodega' => $validated['bodega'] ?? null,
+                    'propietario_id' => $persona['tipo'] === 'arrendatario' ? $propietarioPrincipalId : null,
+                ]);
+
+                AuditLogger::logCreate(Copropietario::class, $nuevo->id, $nuevo->toArray());
+
+                if ($persona['tipo'] === 'propietario' && $propietarioPrincipalId === null) {
+                    $propietarioPrincipalId = $nuevo->id;
+                }
+            }
+
+            foreach ($validated['autorizados'] ?? [] as $autorizado) {
                 PersonaAutorizada::create([
                     'nombre_completo' => $autorizado['nombre_completo'],
                     'rut_pasaporte' => $autorizado['rut_pasaporte'],
-                    'departamento' => $autorizado['departamento'] ?? $request->numero_departamento,
-                    'patente' => $autorizado['patente'],
+                    'departamento' => $autorizado['departamento'] ?? $validated['numero_departamento'],
+                    'patente' => $autorizado['patente'] ?? null,
                     'copropietario_id' => $propietarioPrincipalId,
                 ]);
             }
-        }
+        });
 
         return redirect()->route('copropietarios.index')->with('success', 'Copropietarios y personas autorizadas registradas correctamente.');
     }
@@ -290,4 +289,3 @@ class CopropietarioController extends Controller
         );
     }
 }
-

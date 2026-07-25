@@ -66,16 +66,23 @@ class UpdateCopropietarioRequest extends FormRequest
      * Requisito 27.4: Sanitizar entradas antes de almacenar
      * Remueve tags HTML y scripts para prevenir XSS
      */
-    protected function prepareForValidation(): void
+    public function prepareForValidation(): void
     {
         $this->merge([
-            'nombre_completo' => strip_tags($this->nombre_completo ?? ''),
-            'telefono' => strip_tags($this->telefono ?? ''),
-            'correo' => strip_tags($this->correo ?? ''),
-            'patente' => strip_tags($this->patente ?? ''),
-            'numero_departamento' => strip_tags($this->numero_departamento ?? ''),
-            'estacionamiento' => strip_tags($this->estacionamiento ?? ''),
-            'bodega' => strip_tags($this->bodega ?? ''),
+            'nombre_completo' => $this->sanitize($this->nombre_completo),
+            'telefono' => $this->sanitize($this->telefono),
+            'correo' => $this->sanitize($this->correo),
+            'patente' => $this->sanitize($this->patente),
+            'numero_departamento' => $this->sanitize($this->numero_departamento),
+            'estacionamiento' => $this->sanitize($this->estacionamiento),
+            'bodega' => $this->sanitize($this->bodega),
         ]);
+    }
+
+    private function sanitize(?string $value): string
+    {
+        $withoutScripts = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $value ?? '');
+
+        return trim(strip_tags($withoutScripts ?? ''));
     }
 }

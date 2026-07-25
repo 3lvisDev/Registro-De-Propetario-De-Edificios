@@ -31,7 +31,7 @@ class CopropietarioFactory extends Factory
         return [
             'nombre_completo' => fake()->name(),
             'numero_departamento' => fake()->numberBetween(101, 999),
-            'tipo' => fake()->randomElement(['Propietario', 'Arrendatario']),
+            'tipo' => fake()->randomElement(['propietario', 'arrendatario']),
             'telefono' => fake()->optional()->phoneNumber(),
             'correo' => fake()->optional()->safeEmail(),
             'patente' => fake()->optional()->regexify('[A-Z]{2}[0-9]{4}'),
@@ -49,7 +49,7 @@ class CopropietarioFactory extends Factory
     public function propietario(): static
     {
         return $this->state(fn (array $attributes) => [
-            'tipo' => 'Propietario',
+            'tipo' => 'propietario',
             'propietario_id' => null,
         ]);
     }
@@ -62,7 +62,7 @@ class CopropietarioFactory extends Factory
     public function arrendatario(): static
     {
         return $this->state(fn (array $attributes) => [
-            'tipo' => 'Arrendatario',
+            'tipo' => 'arrendatario',
         ]);
     }
 }

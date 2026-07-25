@@ -26,7 +26,7 @@
             </tr>
         </thead>
         <tbody class="text-center align-middle">
-            @foreach ($personas as $p)
+            @forelse ($personasAutorizadas as $p)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $p->nombre_completo }}</td>
@@ -41,8 +41,10 @@
                         </form>
                     </td>
                 </tr>
-            @endforeach
+            @empty
+                <tr><td colspan="6">No hay personas autorizadas registradas.</td></tr>
+            @endforelse
         </tbody>
     </table>
+    {{ $personasAutorizadas->links() }}
 @endsection
-

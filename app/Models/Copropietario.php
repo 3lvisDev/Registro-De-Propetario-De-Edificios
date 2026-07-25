@@ -100,6 +100,11 @@ class Copropietario extends Model
         'correo',
     ];
 
+    public function setTipoAttribute(mixed $value): void
+    {
+        $this->attributes['tipo'] = mb_strtolower(trim((string) $value));
+    }
+
     /**
      * Relación hasMany: Arrendatarios asociados a este propietario.
      * 
@@ -136,4 +141,3 @@ class Copropietario extends Model
         return $this->hasMany(PersonaAutorizada::class);
     }
 }
-
