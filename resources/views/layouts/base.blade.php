@@ -43,6 +43,12 @@
                                 <i class="fas fa-user-shield me-2"></i>Usuarios
                             </a>
                         </li>
+                        <li class="nav-item mb-2">
+                            <a href="{{ route('admin.backups.index') }}"
+                               class="nav-link text-white {{ request()->routeIs('admin.backups.*') ? 'active' : '' }}">
+                                <i class="fas fa-shield-halved me-2"></i>Respaldos
+                            </a>
+                        </li>
                     @endif
                 </ul>
             </div>
