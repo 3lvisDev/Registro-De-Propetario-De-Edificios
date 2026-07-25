@@ -1,6 +1,7 @@
 /.phpunit.cache
 /node_modules
 /nativephp
+/release
 /public/build
 /public/hot
 /public/storage
