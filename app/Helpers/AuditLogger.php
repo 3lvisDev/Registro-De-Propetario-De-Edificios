@@ -60,6 +60,16 @@ class AuditLogger
         self::log('unauthorized', $modelType ?? 'N/A', $modelId, null, ['attempted_action' => $action]);
     }
 
+    public static function logAction(
+        string $action,
+        string $modelType,
+        ?int $modelId = null,
+        ?array $oldValues = null,
+        ?array $newValues = null
+    ): void {
+        self::log($action, $modelType, $modelId, $oldValues, $newValues);
+    }
+
     /**
      * Core logging method.
      *

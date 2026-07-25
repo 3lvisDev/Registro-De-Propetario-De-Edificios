@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Services\PortableBackupService;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,9 @@ class BackupController extends Controller
             'backup_password' => ['required', 'confirmed', Password::min(12)],
         ]);
 
+        AuditLogger::logAction('backup_export', 'SystemBackup', null, null, [
+            'exported_by' => $request->user()->email,
+        ]);
         $contents = $backups->export($validated['backup_password']);
         $filename = 'registro-propietarios-'.now()->format('Y-m-d-His').'.rpebackup';
 

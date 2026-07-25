@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PersonaAutorizadaController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Models\User;
 
 /*
@@ -95,6 +96,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('backups', [BackupController::class, 'index'])->name('backups.index');
     Route::post('backups/export', [BackupController::class, 'export'])->name('backups.export');
     Route::post('backups/import', [BackupController::class, 'import'])->name('backups.import');
+    Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 });
 
 require __DIR__.'/auth.php';

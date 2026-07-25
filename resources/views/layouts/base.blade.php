@@ -49,6 +49,12 @@
                                 <i class="fas fa-shield-halved me-2"></i>Respaldos
                             </a>
                         </li>
+                        <li class="nav-item mb-2">
+                            <a href="{{ route('admin.audit-logs.index') }}"
+                               class="nav-link text-white {{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}">
+                                <i class="fas fa-clock-rotate-left me-2"></i>Actividad
+                            </a>
+                        </li>
                     @endif
                 </ul>
             </div>

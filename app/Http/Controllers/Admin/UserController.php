@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\AuditLogger;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -40,6 +41,12 @@ class UserController extends Controller
             'is_admin' => (bool) ($validated['is_admin'] ?? false),
         ]);
 
+        $createdUser = User::query()->where('email', $validated['email'])->firstOrFail();
+        AuditLogger::logCreate(User::class, $createdUser->id, [
+            'email' => $createdUser->email,
+            'is_admin' => $createdUser->isAdmin(),
+        ]);
+
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario creado correctamente.');
     }
@@ -51,6 +58,10 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $oldValues = [
+            'email' => $user->email,
+            'is_admin' => $user->isAdmin(),
+        ];
         $validated = $request->validate([
             'email' => [
                 'required',
@@ -80,6 +91,11 @@ class UserController extends Controller
         }
 
         $user->save();
+        AuditLogger::logUpdate(User::class, $user->id, $oldValues, [
+            'email' => $user->email,
+            'is_admin' => $user->isAdmin(),
+            'password_changed' => ! empty($validated['password']),
+        ]);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario actualizado correctamente.');
@@ -95,7 +111,10 @@ class UserController extends Controller
             return back()->withErrors(['user' => 'No puede eliminar el único administrador.']);
         }
 
+        $oldValues = ['email' => $user->email, 'is_admin' => $user->isAdmin()];
+        $userId = $user->id;
         $user->delete();
+        AuditLogger::logDelete(User::class, $userId, $oldValues);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario eliminado correctamente.');
