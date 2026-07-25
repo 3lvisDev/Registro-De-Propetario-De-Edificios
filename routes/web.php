@@ -5,6 +5,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CopropietarioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PersonaAutorizadaController;
+use App\Http\Controllers\Admin\UserController;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +20,13 @@ use App\Http\Controllers\PersonaAutorizadaController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    if (! User::query()->exists()) {
+        return redirect()->route('register');
+    }
+
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -79,5 +87,8 @@ Route::middleware('auth')->group(function () {
     })->name('duckdns.estado');
 });
 
-require __DIR__.'/auth.php';
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('users', UserController::class)->only(['index', 'create', 'store']);
+});
 
+require __DIR__.'/auth.php';

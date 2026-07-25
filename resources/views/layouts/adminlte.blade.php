@@ -55,11 +55,20 @@
         <h4 class="text-white text-center">Mi Panel</h4>
         <a href="{{ route('dashboard') }}"><i class="fas fa-home me-2"></i> Dashboard</a>
         <a href="{{ route('copropietarios.index') }}"><i class="fas fa-users me-2"></i> Copropietarios</a>
+        @if (Auth::user()->isAdmin())
+            <a href="{{ route('admin.users.index') }}"><i class="fas fa-user-shield me-2"></i> Usuarios</a>
+        @endif
     </div>
 
     <div class="topbar">
         <span>@yield('title', 'Panel')</span>
-        <span>Bienvenido, {{ Auth::user()->name }}</span>
+        <div class="d-flex align-items-center gap-3">
+            <span>Bienvenido, {{ Auth::user()->email }}</span>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button class="btn btn-sm btn-light" type="submit">Cerrar sesión</button>
+            </form>
+        </div>
     </div>
 
     <div class="content">
@@ -71,4 +80,3 @@
 
 </body>
 </html>
-
