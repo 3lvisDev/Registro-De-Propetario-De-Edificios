@@ -59,5 +59,54 @@ class InitialSetupAndUserManagementTest extends TestCase
             'password' => 'Secure-password-123',
             'password_confirmation' => 'Secure-password-123',
         ])->assertForbidden();
+        $this->actingAs($user)->get('/admin/users/'.$user->id.'/edit')->assertForbidden();
+        $this->actingAs($user)->put('/admin/users/'.$user->id, [
+            'email' => 'changed@example.com',
+        ])->assertForbidden();
+        $this->actingAs($user)->delete('/admin/users/'.$user->id)->assertForbidden();
+    }
+
+    public function test_admin_can_edit_user_and_promote_it_to_administrator(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $response = $this->actingAs($admin)->put('/admin/users/'.$user->id, [
+            'email' => 'promoted@example.com',
+            'password' => 'New-secure-password-123',
+            'password_confirmation' => 'New-secure-password-123',
+            'is_admin' => '1',
+        ]);
+
+        $response->assertRedirect(route('admin.users.index'));
+        $user->refresh();
+        $this->assertSame('promoted@example.com', $user->email);
+        $this->assertTrue($user->isAdmin());
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('New-secure-password-123', $user->password));
+    }
+
+    public function test_admin_can_delete_another_user(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $user = User::factory()->create(['is_admin' => false]);
+
+        $this->actingAs($admin)->delete('/admin/users/'.$user->id)
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    }
+
+    public function test_admin_cannot_delete_itself_or_remove_the_last_admin_role(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+
+        $this->actingAs($admin)->delete('/admin/users/'.$admin->id)
+            ->assertSessionHasErrors('user');
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+
+        $this->actingAs($admin)->put('/admin/users/'.$admin->id, [
+            'email' => $admin->email,
+        ])->assertSessionHasErrors('is_admin');
+        $this->assertTrue($admin->fresh()->isAdmin());
     }
 }
